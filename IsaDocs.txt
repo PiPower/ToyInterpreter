@@ -1,0 +1,4 @@
+This file contains all the opcodes and instructions structure 
+for VM that supports functional subset of lox
+
+1 - MOVE IMMIDITE; structure -> op_code(2 byte) + value(4 byte double)
