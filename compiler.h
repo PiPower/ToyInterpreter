@@ -6,19 +6,26 @@
 enum class OpCodes;
 struct InstructionSequence
 {
-	uint16_t* instruction;
+	char* instruction; // instruction is of type uint16, char is used to make offsets easier to operate
 	int instruction_offset;
 	unsigned int size;
 };
 
 InstructionSequence compile(const std::string& source);
-void translate(AstNode* root, const InstructionSequence& program );
 InstructionSequence backend(const std::vector<AstNode*>& AstSequence);
 uint16_t getInstructionValue(OpCodes opcode);
+OpCodes valueToOpcode(uint16_t value);
 
 enum class OpCodes
 {
-	MOVE_IMMIDIATE,
+	EXIT,
+	PUSH_IMMIDIATE,
+	POP,
+	PUSH,
+	ADD,
+	DIVIDE,
+	SUBTRACT,
+	MULTIPLY,
 };
 
 #endif // !COMPILER

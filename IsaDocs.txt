@@ -1,4 +1,13 @@
-This file contains all the opcodes and instructions structure 
+This file contains all the opcodes and descriptions
 for VM that supports functional subset of lox
-
-1 - MOVE IMMIDITE; structure -> op_code(2 byte) + value(4 byte double)
+----------------------------------------
+ Name; Description, byte structure
+---------------------------------------
+ EXIT; exit program; op_code(2 byte)
+ PUSH IMMIDITE; Push immidiate onto the stack; op_code(2 byte)|value(8 byte double)
+ POP; pop value from stack; op_code(2 byte)
+ PUSH; push value onto stack; op_code(2 byte)
+ ADD,
+ DIVIDE,
+ SUBTRACT,
+ MULTIPLY; Calculat mentioned op. First pop both operands from stack then performorms op and pushes result onto stack; op_code(2 byte)

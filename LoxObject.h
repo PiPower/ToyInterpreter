@@ -3,7 +3,7 @@
 
 enum class LoxType
 {
-	VALUE,
+	VALUE, // lightweight wrapper around double to keep stack management easy
 	STRING
 };
 

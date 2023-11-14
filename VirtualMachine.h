@@ -11,11 +11,13 @@ class VirtualMachine
 {
 public:
 	VirtualMachine();
-	void Execute(uint16_t* instructionData);
+	void Execute(char* instructionData);
+	LoxObject Pop();
+	void Push(LoxObject obj);
 private:
 	uint16_t* ip_base;
 	uint16_t* ip;
-	std::stack< LoxObject> stack;
+	std::stack<LoxObject> stack;
 };
 
 #endif // !VIRTUAL_MACHINE
