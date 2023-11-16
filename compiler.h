@@ -3,6 +3,7 @@
 #include <string>
 #include "LoxObject.h"
 #include "parser.h"
+
 enum class OpCodes;
 struct InstructionSequence
 {

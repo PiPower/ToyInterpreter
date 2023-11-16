@@ -2,47 +2,6 @@
 #include <iostream>
 using namespace std;
 
-#define AS_DOUBLE(ptr) *(double*)(ptr)
-
-typedef double (*op_type)(double, double);
-
-double add(double x, double y)
-{
-    return x + y;
-}
-
-double divide(double x, double y)
-{
-    return x / y;
-}
-
-double subtract(double x, double y)
-{
-    return x - y;
-}
-
-double multiply(double x, double y)
-{
-    return x * y;
-}
-op_type select_op(OpCodes opcode)
-{
-    switch (opcode)
-    {
-    case OpCodes::ADD:
-        return add;
-    case OpCodes::DIVIDE:
-        return divide;
-    case OpCodes::SUBTRACT:
-        return subtract;
-    case OpCodes::MULTIPLY:
-        return multiply;
-    default:
-        cout << "Unspported OP\n";
-        exit(-1);
-        break;
-    }
-}
 void compile_and_execute(const std::string& source)
 {
     VirtualMachine vm;
@@ -112,18 +71,15 @@ void VirtualMachine::Execute(InstructionSequence program)
         case OpCodes::DIVIDE:
         case OpCodes::ADD:
         {
-            op = select_op(instructionCode);
-
-            LoxObject b = Pop();
-            LoxObject a = Pop();
-
             LoxObject c;
-            c.type = LoxType::VALUE;
-            c.value.data = new double;
-            AS_DOUBLE(c.value.data) = op(AS_DOUBLE(a.value.data), AS_DOUBLE(b.value.data) );
+            LoxObject b = Pop();
+            LoxObject a = Pop(); 
 
-            delete b.value.data;
-            delete a.value.data;
+            op = select_op(instructionCode, a , b);
+            c = op(a, b);
+
+            FreeLoxObject(a);
+            FreeLoxObject(b);
             Push(c);
             break;
         }
@@ -151,3 +107,24 @@ void VirtualMachine::Push(LoxObject obj)
 {
     stack.push(obj);
 }
+
+op_type VirtualMachine::select_op(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand)
+{
+    switch (opcode)
+    {
+    case OpCodes::ADD:
+        return add_number;
+    case OpCodes::DIVIDE:
+        return divide_number;
+    case OpCodes::SUBTRACT:
+        return subtract_number;
+    case OpCodes::MULTIPLY:
+        return multiply_number;
+    default:
+        cout << "Unspported OP\n";
+        exit(-1);
+        break;
+    }
+}
+
+

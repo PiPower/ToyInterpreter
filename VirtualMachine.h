@@ -4,7 +4,6 @@
 #include <stack>
 #include "LoxObject.h"
 #include "compiler.h"
-
 void compile_and_execute(const std::string& source);
 
 class VirtualMachine
@@ -14,6 +13,8 @@ public:
 	void Execute(InstructionSequence instructionData);
 	LoxObject Pop();
 	void Push(LoxObject obj);
+private:
+	op_type select_op(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand);
 private:
 	uint16_t* ip_base;
 	uint16_t* ip;
