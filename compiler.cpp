@@ -68,6 +68,7 @@ void EmitInstructionWithPayload(OpCodes opcode, InstructionSequence& program, vo
     program.instruction += payload_size;
 }
 
+//Add new string to string table
 void EmitString(InstructionSequence& program,const char* string,const int size)
 {
     if (program.string_count + 1 >= program.table_size)
@@ -80,7 +81,6 @@ void EmitString(InstructionSequence& program,const char* string,const int size)
     }
     program.stringTable[program.string_count] = new char[size];
     memcpy(program.stringTable[program.string_count], string, size);
-    EmitInstructionWithPayload(OpCodes::PUSH_STRING, program, (void*)&program.string_count, sizeof(int));
     program.string_count += 1;
 }
 void translate_2_operand_op(AstNode* root, OpCodes opcode ,InstructionSequence& program, CompilationMeta& metaData)
@@ -95,6 +95,34 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
 {
     switch (root->type)
     {
+    case AstNodeType::IDENTIFIER:
+    {
+        int index = 0;
+        for (; index < program.string_count; index++)
+        {
+            if (strcmp( ((string*)root->data)->c_str(), program.stringTable[index]) == 0 ) break;
+        }
+        if (index >= program.string_count)
+        {
+            cout << "UKNOWN VARIABLE !!!" << endl;
+            exit(-1);
+        }
+        EmitInstructionWithPayload(OpCodes::GET_GLOBAL_VARIABLE, program, &index, sizeof(int));
+        break;
+    }
+    case AstNodeType::VARIABLE_DECLARATION:
+    {
+        string* name = (string*)root->children[0]->data;
+        EmitString(program, name->c_str(), name->size() + 1);
+        int string_index = program.string_count - 1;
+        EmitInstructionWithPayload(OpCodes::DEFINE_GLOBAL_VARIABLE, program, &string_index, sizeof(int) );
+        if (root->children[1] != nullptr)
+        {
+            dispatch(root->children[1], program, metaData);
+            EmitInstructionWithPayload(OpCodes::SET_GLOBAL_VARIABLE, program, &string_index, sizeof(int));
+        }
+        break;
+    }
     case AstNodeType::NUMBER:
         EmitInstructionWithPayload(OpCodes::PUSH_IMMIDIATE, program, root->data, sizeof(double));
         break;
@@ -108,7 +136,11 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         EmitInstruction(OpCodes::PUSH_NIL, program);
         break;
     case AstNodeType::STRING:
+    {
         EmitString(program, ((string*)root->data)->c_str(), ((string*)root->data)->size() + 1);
+        int string_index = program.string_count - 1;
+        EmitInstructionWithPayload(OpCodes::PUSH_STRING, program, (void*)&string_index, sizeof(int));
+    }
         break;
     case AstNodeType::OP_SUBTRACT:
     case AstNodeType::OP_MUL:
@@ -138,7 +170,6 @@ InstructionSequence backend(const std::vector<AstNode*>& AstSequence)
     program.table_size = 3;
     CompilationMeta metaData;
     metaData.scope = 0;
-
     for (AstNode* root : AstSequence)
     {
         dispatch(root, program, metaData);

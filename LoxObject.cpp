@@ -7,7 +7,7 @@ void printLoxObject(const LoxObject& obj)
 	switch (obj.type)
 	{
 	case LoxType::VALUE:
-		cout << *(double*)obj.value.data;
+		cout << obj.value.number;
 		break;
 	case LoxType::STRING:
 		cout << (char*)obj.value.data;
@@ -21,7 +21,7 @@ LoxObject add_number(const LoxObject& leftOperand, const LoxObject& rightOperand
 	LoxObject c;
 	c.type = LoxType::VALUE;
 	c.value.data = new double;
-	AS_DOUBLE(c.value.data) = AS_DOUBLE(leftOperand.value.data) + AS_DOUBLE(rightOperand.value.data);
+	c.value.number = leftOperand.value.number + rightOperand.value.number;
 	return c;
 }
 
@@ -30,7 +30,7 @@ LoxObject subtract_number(const LoxObject& leftOperand, const LoxObject& rightOp
 	LoxObject c;
 	c.type = LoxType::VALUE;
 	c.value.data = new double;
-	AS_DOUBLE(c.value.data) = AS_DOUBLE(leftOperand.value.data) - AS_DOUBLE(rightOperand.value.data);
+	c.value.number = leftOperand.value.number - rightOperand.value.number;
 	return c;
 }
 
@@ -39,7 +39,7 @@ LoxObject multiply_number(const LoxObject& leftOperand, const LoxObject& rightOp
 	LoxObject c;
 	c.type = LoxType::VALUE;
 	c.value.data = new double;
-	AS_DOUBLE(c.value.data) = AS_DOUBLE(leftOperand.value.data) * AS_DOUBLE(rightOperand.value.data);
+	c.value.number = leftOperand.value.number * rightOperand.value.number;
 	return c;
 }
 
@@ -48,7 +48,7 @@ LoxObject divide_number(const LoxObject& leftOperand, const LoxObject& rightOper
 	LoxObject c;
 	c.type = LoxType::VALUE;
 	c.value.data = new double;
-	AS_DOUBLE(c.value.data) = AS_DOUBLE(leftOperand.value.data) / AS_DOUBLE(rightOperand.value.data);
+	c.value.number = leftOperand.value.number / rightOperand.value.number;
 	return c;
 }
 

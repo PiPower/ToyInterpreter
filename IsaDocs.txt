@@ -15,3 +15,5 @@ for VM that supports functional subset of lox
 	SUBTRACT,
 	MULTIPLY; Calculat mentioned op. First pop both operands from stack then performorms op and pushes result onto stack; op_code(2 byte)
 	PRINT; pop 1st lox object from stack and print it; op_code(2 byte)
+	DEFINE_GLOBAL_VARIABLE; sets name of variable in string table, then stores index to that string;  op_code(2 byte)|string_index(4 byte int)
+	SET_GLOBAL_VARIABLE

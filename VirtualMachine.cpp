@@ -29,6 +29,32 @@ void VirtualMachine::Execute(InstructionSequence program)
         {
         case OpCodes::EXIT:
             return;
+        case OpCodes::DEFINE_GLOBAL_VARIABLE:
+        {
+            int index = *(int*)instructionData;
+            instructionData += sizeof(int);
+            LoxObject place_holder;
+            place_holder.type = LoxType::NIL;
+            place_holder.value.data = nullptr;
+            InsertGlobal(program.stringTable[index], place_holder);
+            break;
+        }
+        case OpCodes::SET_GLOBAL_VARIABLE:
+        {
+            int index = *(int*)instructionData;
+            instructionData += sizeof(int);
+            LoxObject obj = Pop();
+            UpdateGlobal(program.stringTable[index], obj);
+            break;
+        }
+        case OpCodes::GET_GLOBAL_VARIABLE:
+        {
+            int index = *(int*)instructionData;
+            instructionData += sizeof(int);
+            LoxObject global = GetGlobal(program.stringTable[index]);
+            Push(global);
+            break;
+        }
         case OpCodes::PUSH_STRING:
         {
             LoxObject c;
@@ -44,7 +70,7 @@ void VirtualMachine::Execute(InstructionSequence program)
             LoxObject c;
             c.type = LoxType::VALUE;
             c.value.data = new double;
-            AS_DOUBLE(c.value.data) = AS_DOUBLE(instructionData);
+            c.value.number = AS_DOUBLE(instructionData);
             Push(c);
             instructionData += sizeof(double);
             break;
@@ -146,6 +172,39 @@ op_type VirtualMachine::string_resolver(OpCodes opcode, const LoxObject& leftOpe
         exit(-1);
         break;
     }
+}
+
+void VirtualMachine::InsertGlobal(char* string, LoxObject obj)
+{
+    unordered_map <std::string, LoxObject>::iterator pos = globals.find(string);
+    if (pos != globals.cend())
+    {
+        cout << "ERROR Redefinition of element \n";
+        exit(-1);
+    }
+    globals.insert({ string, obj });
+}
+
+LoxObject VirtualMachine::GetGlobal(char* string)
+{
+    unordered_map <std::string, LoxObject>::iterator pos = globals.find(string);
+    if (pos == globals.cend())
+    {
+        cout << "ERROR Uknown element \n";
+        exit(-1);
+    }
+    return pos->second;
+}
+
+void VirtualMachine::UpdateGlobal(char* string, LoxObject obj)
+{
+    unordered_map <std::string, LoxObject>::iterator pos = globals.find(string);
+    if (pos == globals.cend())
+    {
+        cout << "ERROR Uknown element \n";
+        exit(-1);
+    }
+    pos->second = obj;
 }
 
 

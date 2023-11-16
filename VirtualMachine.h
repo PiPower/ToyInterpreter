@@ -2,6 +2,7 @@
 #define VIRTUAL_MACHINE
 #include <string>
 #include <stack>
+#include <unordered_map>
 #include "LoxObject.h"
 #include "compiler.h"
 void compile_and_execute(const std::string& source);
@@ -17,10 +18,15 @@ private:
 	op_type select_op(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand);
 	op_type number_resolver(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand);
 	op_type string_resolver(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand);
+	void InsertGlobal(char* string, LoxObject obj);
+	LoxObject GetGlobal(char* string);
+	void RemoveGlobal(char* string, LoxObject obj);
+	void UpdateGlobal(char* string, LoxObject obj);
 private:
 	uint16_t* ip_base;
 	uint16_t* ip;
 	std::stack<LoxObject> stack;
+	std::unordered_map <std::string, LoxObject> globals;
 };
 
 #endif // !VIRTUAL_MACHINE
