@@ -1,5 +1,4 @@
-print "YOLOLOL";
-print "xDDDD";
+print "L" + "xD";
 
 
 print 4 * 4 /2.6;

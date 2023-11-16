@@ -666,10 +666,11 @@ void printAST(AstRoot* root)
 
 void printSequence(std::vector<AstNode*>& AstSequence)
 {
-	cout <<endl << "SEQUENCE START" << endl;
+	cout <<endl << "SEQUENCE START" << endl << endl;
 	for (AstRoot* root : AstSequence)
 	{
 		printAST(root);
 		cout << endl;
 	}
+	cout << endl << "SEQUENCE END" << endl << endl;
 }

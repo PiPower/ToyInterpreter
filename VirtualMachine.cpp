@@ -110,6 +110,14 @@ void VirtualMachine::Push(LoxObject obj)
 
 op_type VirtualMachine::select_op(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand)
 {
+    if (leftOperand.type == LoxType::VALUE && rightOperand.type == LoxType::VALUE) return number_resolver(opcode, leftOperand, rightOperand);
+    if (leftOperand.type == LoxType::STRING && rightOperand.type == LoxType::STRING) return string_resolver(opcode, leftOperand, rightOperand);
+    cout << "Incorrect combination of operands \n";
+    exit(-1);
+}
+
+op_type VirtualMachine::number_resolver(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand)
+{
     switch (opcode)
     {
     case OpCodes::ADD:
@@ -120,6 +128,19 @@ op_type VirtualMachine::select_op(OpCodes opcode, const LoxObject& leftOperand, 
         return subtract_number;
     case OpCodes::MULTIPLY:
         return multiply_number;
+    default:
+        cout << "Unspported OP\n";
+        exit(-1);
+        break;
+    }
+}
+
+op_type VirtualMachine::string_resolver(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand)
+{
+    switch (opcode)
+    {
+    case OpCodes::ADD:
+        return concat_strings;
     default:
         cout << "Unspported OP\n";
         exit(-1);

@@ -15,6 +15,8 @@ public:
 	void Push(LoxObject obj);
 private:
 	op_type select_op(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand);
+	op_type number_resolver(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand);
+	op_type string_resolver(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand);
 private:
 	uint16_t* ip_base;
 	uint16_t* ip;
