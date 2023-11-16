@@ -11,7 +11,7 @@ class VirtualMachine
 {
 public:
 	VirtualMachine();
-	void Execute(char* instructionData);
+	void Execute(InstructionSequence instructionData);
 	LoxObject Pop();
 	void Push(LoxObject obj);
 private:

@@ -6,11 +6,20 @@
 enum class OpCodes;
 struct InstructionSequence
 {
+	//instruction data region
 	char* instruction; // instruction is of type uint16, char is used to make offsets easier to operate
 	int instruction_offset;
 	unsigned int size;
+	//string data region
+	char** stringTable;
+	int string_count;
+	int table_size;
 };
 
+struct CompilationMeta
+{
+	int scope;
+};
 InstructionSequence compile(const std::string& source);
 InstructionSequence backend(const std::vector<AstNode*>& AstSequence);
 uint16_t getInstructionValue(OpCodes opcode);
@@ -20,12 +29,16 @@ enum class OpCodes
 {
 	EXIT,
 	PUSH_IMMIDIATE,
+	PUSH_BOOL,
+	PUSH_NIL,
+	PUSH_STRING,
 	POP,
 	PUSH,
 	ADD,
 	DIVIDE,
 	SUBTRACT,
 	MULTIPLY,
+	PRINT
 };
 
 #endif // !COMPILER

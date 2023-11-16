@@ -3,7 +3,7 @@
 
 using namespace std;
 
-void dispatch(AstNode* root, InstructionSequence& program);
+void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& metaData);
 
 OpCodes AstNodeTypeToOpCode(AstNodeType node_typ)
 {
@@ -59,7 +59,7 @@ void EmitInstruction(OpCodes opcode, InstructionSequence& program)
     program.instruction += sizeof(uint16_t);
 }
 
-void EmitInstructionWithPayload(OpCodes opcode,  InstructionSequence& program, void* Payload, int payload_size)
+void EmitInstructionWithPayload(OpCodes opcode, InstructionSequence& program, void* Payload, int payload_size)
 {
     EmitInstruction(opcode, program);
     AdjustProgramSize(payload_size, program);
@@ -68,30 +68,57 @@ void EmitInstructionWithPayload(OpCodes opcode,  InstructionSequence& program, v
     program.instruction += payload_size;
 }
 
-void translate_NUMBER(AstNode* root,  InstructionSequence& program)
+void EmitString(InstructionSequence& program,const char* string,const int size)
 {
-    EmitInstructionWithPayload(OpCodes::PUSH_IMMIDIATE, program, root->data, sizeof(double));
+    if (program.string_count + 1 >= program.table_size)
+    {
+        char** buff = new char*[program.table_size * 2];
+        program.table_size *= 2;
+        memcpy(buff, program.stringTable, sizeof(char*) * program.string_count);
+        delete[] program.stringTable;
+        program.stringTable = buff;
+    }
+    program.stringTable[program.string_count] = new char[size];
+    memcpy(program.stringTable[program.string_count], string, size);
+    EmitInstructionWithPayload(OpCodes::PUSH_STRING, program, (void*)&program.string_count, sizeof(int));
+    program.string_count += 1;
 }
-void translate_2_operand_op(AstNode* root, OpCodes opcode ,InstructionSequence& program)
+void translate_2_operand_op(AstNode* root, OpCodes opcode ,InstructionSequence& program, CompilationMeta& metaData)
 {
-    dispatch(root->children[0], program);
-    dispatch(root->children[1], program);
+    dispatch(root->children[0], program, metaData);
+    dispatch(root->children[1], program, metaData);
 
     EmitInstruction(opcode, program);
 }
 
-void dispatch(AstNode* root, InstructionSequence& program)
+void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& metaData)
 {
     switch (root->type)
     {
     case AstNodeType::NUMBER:
-        translate_NUMBER(root, program);
+        EmitInstructionWithPayload(OpCodes::PUSH_IMMIDIATE, program, root->data, sizeof(double));
+        break;
+    case AstNodeType::LOGICAL:
+    {
+        bool dataLogic = *(bool*)root->data ? true : false;
+        EmitInstructionWithPayload(OpCodes::PUSH_BOOL, program, &dataLogic, sizeof(bool));
+        break;
+    }
+    case AstNodeType::NIL:
+        EmitInstruction(OpCodes::PUSH_NIL, program);
+        break;
+    case AstNodeType::STRING:
+        EmitString(program, ((string*)root->data)->c_str(), ((string*)root->data)->size() + 1);
         break;
     case AstNodeType::OP_SUBTRACT:
     case AstNodeType::OP_MUL:
     case AstNodeType::OP_DIVIDE:
     case AstNodeType::OP_ADD:
-        translate_2_operand_op(root, AstNodeTypeToOpCode(root->type), program);
+        translate_2_operand_op(root, AstNodeTypeToOpCode(root->type), program, metaData);
+        break;
+    case AstNodeType::OP_PRINT:
+        dispatch(root->children[0], program, metaData);
+        EmitInstruction(OpCodes::PRINT, program);
         break;
     default:
         cout << "Unsupported instruction !!!!" << endl;
@@ -106,10 +133,15 @@ InstructionSequence backend(const std::vector<AstNode*>& AstSequence)
     program.instruction = new char[1000];
     program.instruction_offset = 0;
     program.size = 1000;
+    program.stringTable = new char*[3]; 
+    program.string_count = 0;
+    program.table_size = 3;
+    CompilationMeta metaData;
+    metaData.scope = 0;
 
     for (AstNode* root : AstSequence)
     {
-        dispatch(root, program);
+        dispatch(root, program, metaData);
     }
     EmitInstruction(OpCodes::EXIT, program);
     return program;
