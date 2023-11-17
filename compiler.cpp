@@ -24,6 +24,16 @@ OpCodes AstNodeTypeToOpCode(AstNodeType node_typ)
     }
 }
 
+int find_name(AstNode* root, InstructionSequence& program)
+{
+
+    for (int index = 0; index < program.string_count; index++)
+    {
+        if (strcmp(((string*)root->data)->c_str(), program.stringTable[index]) == 0) return index;
+    }
+    return -1;
+}
+
 int AllocationSchema(int prev_size)
 {
     return prev_size * 2;
@@ -98,12 +108,8 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
     {
     case AstNodeType::IDENTIFIER:
     {
-        int index = 0;
-        for (; index < program.string_count; index++)
-        {
-            if (strcmp( ((string*)root->data)->c_str(), program.stringTable[index]) == 0 ) break;
-        }
-        if (index >= program.string_count)
+        int index = find_name(root, program) ;
+        if (index == -1)
         {
             cout << "UKNOWN VARIABLE !!!" << endl;
             exit(-1);
@@ -165,6 +171,19 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         dispatch(root->children[0], program, metaData);
         EmitInstruction(OpCodes::PRINT, program);
         break;
+    case AstNodeType::OP_EQUAL:
+    {
+        //currently only supports setting global variables
+        if (root->children[0]->type != AstNodeType::IDENTIFIER)
+        {
+            cout << "given object to assign operator is not l-value \n";
+            exit(-1);
+        }
+        int string_index = find_name(root->children[0], program);
+        dispatch(root->children[1], program, metaData);
+        EmitInstructionWithPayload(OpCodes::SET_GLOBAL_VARIABLE, program, &string_index, sizeof(int));
+        break;
+    }
     default:
         cout << "Unsupported instruction !!!!" << endl;
         exit(-1);

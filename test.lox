@@ -1,10 +1,12 @@
 var x = 4* 3 / 5;
+
+//x = 2314;
 print x/ 30;
 print "L" + "xD";
 
-
-print 4 * 4 /2.6;
-print 2* 2;
+x = 2.6;
+print x * 4 /2.6;
+print 2* 9;
 
 //fun yolo()
 //{
