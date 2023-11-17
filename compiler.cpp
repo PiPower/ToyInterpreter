@@ -83,6 +83,7 @@ void EmitString(InstructionSequence& program,const char* string,const int size)
     memcpy(program.stringTable[program.string_count], string, size);
     program.string_count += 1;
 }
+
 void translate_2_operand_op(AstNode* root, OpCodes opcode ,InstructionSequence& program, CompilationMeta& metaData)
 {
     dispatch(root->children[0], program, metaData);

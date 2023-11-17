@@ -155,7 +155,7 @@ op_type VirtualMachine::number_resolver(OpCodes opcode, const LoxObject& leftOpe
     case OpCodes::MULTIPLY:
         return multiply_number;
     default:
-        cout << "Unspported OP\n";
+        cout << "Unsupported number OP\n";
         exit(-1);
         break;
     }
@@ -168,7 +168,7 @@ op_type VirtualMachine::string_resolver(OpCodes opcode, const LoxObject& leftOpe
     case OpCodes::ADD:
         return concat_strings;
     default:
-        cout << "Unspported OP\n";
+        cout << "Unsupported string OP\n";
         exit(-1);
         break;
     }
