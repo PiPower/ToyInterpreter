@@ -20,6 +20,7 @@ private:
 	op_type string_resolver(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand);
 	void InsertGlobal(char* string, LoxObject obj);
 	LoxObject GetGlobal(char* string);
+	LoxObject LoadObject(char** instructionData, char** stringTable, char type);
 	void RemoveGlobal(char* string, LoxObject obj);
 	void UpdateGlobal(char* string, LoxObject obj);
 private:

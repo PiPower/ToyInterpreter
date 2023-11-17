@@ -30,9 +30,6 @@ enum class OpCodes
 {
 	EXIT,
 	PUSH_IMMIDIATE,
-	PUSH_BOOL,
-	PUSH_NIL,
-	PUSH_STRING,
 	POP,
 	PUSH,
 	ADD,

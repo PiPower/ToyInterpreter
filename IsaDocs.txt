@@ -4,10 +4,12 @@ for VM that supports functional subset of lox
 Name; Description, byte structure
 ---------------------------------------
 EXIT; exit program; op_code(2 byte)
-PUSH IMMIDITE; Push immidiate onto the stack; op_code(2 byte)|value(8 byte double)
-PUSH BOOL; Push bool onto the stack; op_code(2 byte)|bool(1 byte bool)
-PUSH NIL; Push NIL onto the stack; op_code(2 byte)
-PUSH STRING; Push Index of string in string table onto the stack; op_code(2 byte)|index(4 byte int)
+PUSH IMMIDITE; Push immidiate of type specified by 1byte char onto the stack; op_code(2 byte)|type(1 byte) |value*
+	*depending on type value is: 
+	NIL(0) : None
+	NUMBER(1) : double(8 byte) 
+	BOOL(2) : bool(1 byte bool)
+	STRING(3) : index(4 byte int)
 POP; pop value from stack; op_code(2 byte)
 PUSH; push value onto stack; op_code(2 byte)
 ADD,
@@ -16,6 +18,6 @@ SUBTRACT,
 MULTIPLY; Calculat mentioned op. First pop both operands from stack then performorms op and pushes result onto stack; op_code(2 byte)
 PRINT; pop 1st lox object from stack and print it; op_code(2 byte)
 DEFINE GLOBAL VARIABLE; sets name of variable in string table, then stores index to that string;  op_code(2 byte)|string_index(4 byte int)
-SET GLOBAL VARIABLE;
-SET GLOBAL VARIABLE;
-GET GLOBAL VARIABLE;
+DEFINE GLOBAL VARIABLE; creates placeholder for name in global table, name is stored in string table; op_code(2 byte)|string_index(4 byte int)
+SET GLOBAL VARIABLE; assigns new value to global object; op_code(2 byte)|string_index(4 byte int)
+GET GLOBAL VARIABLE; pushes given global onto stack; op_code(2 byte)|string_index(4 byte int)

@@ -55,41 +55,13 @@ void VirtualMachine::Execute(InstructionSequence program)
             Push(global);
             break;
         }
-        case OpCodes::PUSH_STRING:
-        {
-            LoxObject c;
-            c.type = LoxType::STRING;
-            int index = *(int*)instructionData;
-            instructionData += sizeof(int);
-            c.value.data = program.stringTable[index];
-            Push(c);
-            break;
-        }
         case OpCodes::PUSH_IMMIDIATE:
         {
-            LoxObject c;
-            c.type = LoxType::VALUE;
-            c.value.data = new double;
-            c.value.number = AS_DOUBLE(instructionData);
+            char obj_type = *instructionData;
+            instructionData += 1;
+
+            LoxObject c = LoadObject(&instructionData, program.stringTable, obj_type);
             Push(c);
-            instructionData += sizeof(double);
-            break;
-        }
-        case OpCodes::PUSH_NIL:
-        {
-            LoxObject c;
-            c.type = LoxType::NIL;
-            c.value.data = nullptr;
-            Push(c);
-            break;
-        }
-        case OpCodes::PUSH_BOOL:
-        {
-            LoxObject c;
-            c.type = LoxType::BOOL;
-            c.value.boolean = *(bool*)instructionData;
-            Push(c);
-            instructionData += sizeof(double);
             break;
         }
         case OpCodes::SUBTRACT:
@@ -195,6 +167,51 @@ LoxObject VirtualMachine::GetGlobal(char* string)
     }
     return pos->second;
 }
+
+LoxObject VirtualMachine::LoadObject(char** instructionData, char** stringTable, char type)
+{
+    switch (type)
+    {
+    case 0:
+    {
+        LoxObject c;
+        c.type = LoxType::NIL;
+        c.value.data = nullptr;
+        return c;
+    }
+    case 1:
+    {
+        LoxObject c;
+        c.type = LoxType::VALUE;
+        c.value.data = new double;
+        c.value.number = AS_DOUBLE(*instructionData);
+        *instructionData += sizeof(double);
+        return c;
+    }
+    case 2:
+    {
+        LoxObject c;
+        c.type = LoxType::BOOL;
+        c.value.boolean = *(bool*)(*instructionData);
+        *instructionData += sizeof(double);
+        return c;
+    }
+    case 3:
+    {
+        LoxObject c;
+        c.type = LoxType::STRING;
+        int index = *(int*)(*instructionData);
+        *instructionData += sizeof(int);
+        c.value.data = stringTable[index];
+        return c;
+    }
+    default:
+        cout << "ERROR uknown lox type" << endl;
+        exit(-1);
+    }
+}
+
+
 
 void VirtualMachine::UpdateGlobal(char* string, LoxObject obj)
 {

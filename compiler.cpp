@@ -125,22 +125,34 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         break;
     }
     case AstNodeType::NUMBER:
-        EmitInstructionWithPayload(OpCodes::PUSH_IMMIDIATE, program, root->data, sizeof(double));
+        char payload[sizeof(double) +1];
+        payload[0] = 1;
+        memcpy(payload + 1, root->data, sizeof(double));
+        EmitInstructionWithPayload(OpCodes::PUSH_IMMIDIATE, program, payload, sizeof(double) + 1);
         break;
     case AstNodeType::LOGICAL:
     {
-        bool dataLogic = *(bool*)root->data ? true : false;
-        EmitInstructionWithPayload(OpCodes::PUSH_BOOL, program, &dataLogic, sizeof(bool));
+        char payload[sizeof(bool) + 1];
+        payload[0] = 2;
+        memcpy(payload + 1, root->data, sizeof(bool));
+        EmitInstructionWithPayload(OpCodes::PUSH_IMMIDIATE, program, &payload, sizeof(bool) + 1);
         break;
     }
     case AstNodeType::NIL:
-        EmitInstruction(OpCodes::PUSH_NIL, program);
+    {
+        char payload;
+        payload = 0;
+        EmitInstructionWithPayload(OpCodes::PUSH_IMMIDIATE, program, &payload, sizeof(char));
         break;
+    }
     case AstNodeType::STRING:
     {
         EmitString(program, ((string*)root->data)->c_str(), ((string*)root->data)->size() + 1);
+        char payload[sizeof(int) + 1];
+        payload[0] = 3;
         int string_index = program.string_count - 1;
-        EmitInstructionWithPayload(OpCodes::PUSH_STRING, program, (void*)&string_index, sizeof(int));
+        memcpy(payload + 1, &string_index, sizeof(int));
+        EmitInstructionWithPayload(OpCodes::PUSH_IMMIDIATE, program, payload, sizeof(int) + 1);
     }
         break;
     case AstNodeType::OP_SUBTRACT:
