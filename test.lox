@@ -5,6 +5,7 @@ var x =4;
 	{
 		var z = z;
 		print z;
+		print x;
 	}
 	print z;
 }

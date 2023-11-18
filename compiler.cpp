@@ -18,7 +18,7 @@ OpCodes AstNodeTypeToOpCode(AstNodeType node_typ)
     case AstNodeType::OP_MUL:
         return OpCodes::MULTIPLY;
     default:
-        cout << "Unsupported translation" << endl;
+        cout << "BACKEND ERROR: Unsupported translation" << endl;
         exit(-1);
         break;
     }
@@ -124,7 +124,7 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         auto object = metaData.scope_variables[0].find(((string*)root->data)->c_str());
         if (object == metaData.scope_variables[0].end())
         {
-            cout << "UKNOWN VARIABLE !!!" << endl;
+            cout << "BACKEND ERROR: UKNOWN VARIABLE !!!" << endl;
             exit(-1);
         }
         int index = object->second;
@@ -141,7 +141,7 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
 
         if (object != metaData.scope_variables[metaData.scope].end())
         {
-            cout << "Variable redefinition" << endl;
+            cout << "BACKEND ERROR: Variable redefinition" << endl;
             exit(-1);
         }
 
@@ -210,7 +210,7 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         //currently only supports setting global variables
         if (root->children[0]->type != AstNodeType::IDENTIFIER)
         {
-            cout << "given object to assign operator is not l-value \n";
+            cout << "BACKEND ERROR: Given object to assign operator is not l-value \n";
             exit(-1);
         }
         int string_index = find_name(root->children[0], program);
@@ -233,7 +233,7 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         metaData.scope -= 1;
         break;
     default:
-        cout << "Unsupported instruction !!!!" << endl;
+        cout << "BACKEND ERROR: Unsupported instruction !!!!" << endl;
         exit(-1);
         break;
     }
