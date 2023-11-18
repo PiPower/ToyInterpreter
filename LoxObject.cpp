@@ -6,6 +6,9 @@ void printLoxObject(const LoxObject& obj)
 {
 	switch (obj.type)
 	{
+	case LoxType::NIL:
+		cout << "NIL";
+		break;
 	case LoxType::NUMBER:
 		cout << obj.value.number;
 		break;

@@ -108,20 +108,27 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
     {
     case AstNodeType::IDENTIFIER:
     {
-        auto object = metaData.scope_variables[metaData.scope].find(((string*)root->data)->c_str());
-        if (object == metaData.scope_variables[metaData.scope].end())
+        int total_pos = 0;
+        for (int i = metaData.scope; i > 0; i--)
+        {
+            auto object = metaData.scope_variables[i].find(((string*)root->data)->c_str());
+            if (object != metaData.scope_variables[i].end()) 
+            {
+                int index = total_pos + object->second;
+                EmitInstructionWithPayload(OpCodes::GET_LOCAL_VARIABLE, program, &index, sizeof(int));
+                return;
+            }
+            total_pos = total_pos - 1 - metaData.scope_variables[i - 1].size();
+        }
+
+        auto object = metaData.scope_variables[0].find(((string*)root->data)->c_str());
+        if (object == metaData.scope_variables[0].end())
         {
             cout << "UKNOWN VARIABLE !!!" << endl;
             exit(-1);
         }
         int index = object->second;
-
-        OpCodes opcode_get = OpCodes::GET_GLOBAL_VARIABLE;
-        if (metaData.scope > 0) 
-        {
-            opcode_get = OpCodes::GET_LOCAL_VARIABLE;
-        }
-        EmitInstructionWithPayload(opcode_get, program, &index, sizeof(int));
+        EmitInstructionWithPayload(OpCodes::GET_GLOBAL_VARIABLE, program, &index, sizeof(int));
         break;
     }
     case AstNodeType::VARIABLE_DECLARATION:
@@ -146,6 +153,7 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
             opcode_set = OpCodes::SET_LOCAL_VARIABLE;
             object_index = metaData.scope_variables[metaData.scope].size();
         }
+
         metaData.scope_variables[metaData.scope].emplace(variable_name, object_index);
         EmitInstructionWithPayload(opcode_def, program, &object_index, sizeof(int));
         if (root->children[1] != nullptr)

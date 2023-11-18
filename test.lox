@@ -1,9 +1,9 @@
 var x =4;
 {
 	var y = 2.3421;
-	var z = 20;
+	var z = 20.12343;
 	{
-		var z = 9;
+		var z = 10;
 		print z;
 	}
 	print z;
@@ -13,7 +13,7 @@ var x =4;
 print "L" + "xD";
 
 x = 2.6;
-print x * 4 /2.6;
+print x * 4.12124 /2.6;
 print 2* 9;
 
 //fun yolo()
