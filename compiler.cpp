@@ -154,13 +154,13 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
             object_index = metaData.scope_variables[metaData.scope].size();
         }
 
-        metaData.scope_variables[metaData.scope].emplace(variable_name, object_index);
         EmitInstructionWithPayload(opcode_def, program, &object_index, sizeof(int));
         if (root->children[1] != nullptr)
         {
             dispatch(root->children[1], program, metaData);
             EmitInstructionWithPayload(opcode_set, program, &object_index, sizeof(int));
         }
+        metaData.scope_variables[metaData.scope].emplace(variable_name, object_index);
 
         break;
     }

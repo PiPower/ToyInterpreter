@@ -3,7 +3,7 @@ var x =4;
 	var y = 2.3421;
 	var z = 20.12343;
 	{
-		var z = 10;
+		var z = z;
 		print z;
 	}
 	print z;
