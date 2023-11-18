@@ -24,9 +24,8 @@ private:
 	void RemoveGlobal(char* string, LoxObject obj);
 	void UpdateGlobal(char* string, LoxObject obj);
 private:
-	uint16_t* ip_base;
-	uint16_t* ip;
-	std::stack<LoxObject> stack;
+	int stack_base;
+	std::vector<LoxObject> stack;
 	std::unordered_map <std::string, LoxObject> globals;
 };
 

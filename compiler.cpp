@@ -108,26 +108,52 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
     {
     case AstNodeType::IDENTIFIER:
     {
-        int index = find_name(root, program) ;
-        if (index == -1)
+        auto object = metaData.scope_variables[metaData.scope].find(((string*)root->data)->c_str());
+        if (object == metaData.scope_variables[metaData.scope].end())
         {
             cout << "UKNOWN VARIABLE !!!" << endl;
             exit(-1);
         }
-        EmitInstructionWithPayload(OpCodes::GET_GLOBAL_VARIABLE, program, &index, sizeof(int));
+        int index = object->second;
+
+        OpCodes opcode_get = OpCodes::GET_GLOBAL_VARIABLE;
+        if (metaData.scope > 0) 
+        {
+            opcode_get = OpCodes::GET_LOCAL_VARIABLE;
+        }
+        EmitInstructionWithPayload(opcode_get, program, &index, sizeof(int));
         break;
     }
     case AstNodeType::VARIABLE_DECLARATION:
     {
         string* name = (string*)root->children[0]->data;
         EmitString(program, name->c_str(), name->size() + 1);
-        int string_index = program.string_count - 1;
-        EmitInstructionWithPayload(OpCodes::DEFINE_GLOBAL_VARIABLE, program, &string_index, sizeof(int) );
+        int object_index = program.string_count - 1;
+        char* variable_name = program.stringTable[object_index];
+        auto object = metaData.scope_variables[metaData.scope].find(variable_name);
+
+        if (object != metaData.scope_variables[metaData.scope].end())
+        {
+            cout << "Variable redefinition" << endl;
+            exit(-1);
+        }
+
+        OpCodes opcode_def = OpCodes::DEFINE_GLOBAL_VARIABLE;
+        OpCodes opcode_set = OpCodes::SET_GLOBAL_VARIABLE;
+        if (metaData.scope > 0) // for local object index is position offstet relative to base of stack
+        {
+            opcode_def = OpCodes::DEFINE_LOCAL_VARIABLE;
+            opcode_set = OpCodes::SET_LOCAL_VARIABLE;
+            object_index = metaData.scope_variables[metaData.scope].size();
+        }
+        metaData.scope_variables[metaData.scope].emplace(variable_name, object_index);
+        EmitInstructionWithPayload(opcode_def, program, &object_index, sizeof(int));
         if (root->children[1] != nullptr)
         {
             dispatch(root->children[1], program, metaData);
-            EmitInstructionWithPayload(OpCodes::SET_GLOBAL_VARIABLE, program, &string_index, sizeof(int));
+            EmitInstructionWithPayload(opcode_set, program, &object_index, sizeof(int));
         }
+
         break;
     }
     case AstNodeType::NUMBER:
@@ -184,6 +210,20 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         EmitInstructionWithPayload(OpCodes::SET_GLOBAL_VARIABLE, program, &string_index, sizeof(int));
         break;
     }
+    case AstNodeType::BLOCK:
+        metaData.scope += 1;
+        metaData.scope_variables.push_back(unordered_map<string, int>());
+
+        EmitInstruction(OpCodes::START_FRAME, program);
+        for (AstNode* child : root->children)
+        {
+            dispatch(child, program, metaData);
+        }
+        EmitInstruction(OpCodes::END_FRAME, program);
+
+        metaData.scope_variables.pop_back();
+        metaData.scope -= 1;
+        break;
     default:
         cout << "Unsupported instruction !!!!" << endl;
         exit(-1);
@@ -202,6 +242,8 @@ InstructionSequence backend(const std::vector<AstNode*>& AstSequence)
     program.table_size = 3;
     CompilationMeta metaData;
     metaData.scope = 0;
+    metaData.scope_variables.push_back(unordered_map<string, int>());
+
     for (AstNode* root : AstSequence)
     {
         dispatch(root, program, metaData);

@@ -5,7 +5,7 @@
 
 enum class LoxType
 {
-	VALUE, // lightweight wrapper around double to keep stack management easy
+	NUMBER, // lightweight wrapper around double to keep stack management easy
 	BOOL,
 	NIL,
 	STRING

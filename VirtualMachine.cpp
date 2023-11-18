@@ -12,8 +12,7 @@ void compile_and_execute(const std::string& source)
 
 VirtualMachine::VirtualMachine()
 {
-    ip_base = nullptr;
-    ip = nullptr;
+    stack_base = 0;
 }
 
 void VirtualMachine::Execute(InstructionSequence program)
@@ -29,6 +28,15 @@ void VirtualMachine::Execute(InstructionSequence program)
         {
         case OpCodes::EXIT:
             return;
+        case OpCodes::PUSH_IMMIDIATE:
+        {
+            char obj_type = *instructionData;
+            instructionData += 1;
+
+            LoxObject c = LoadObject(&instructionData, program.stringTable, obj_type);
+            Push(c);
+            break;
+        }
         case OpCodes::DEFINE_GLOBAL_VARIABLE:
         {
             int index = *(int*)instructionData;
@@ -55,13 +63,30 @@ void VirtualMachine::Execute(InstructionSequence program)
             Push(global);
             break;
         }
-        case OpCodes::PUSH_IMMIDIATE:
+        case OpCodes::DEFINE_LOCAL_VARIABLE:
         {
-            char obj_type = *instructionData;
-            instructionData += 1;
-
-            LoxObject c = LoadObject(&instructionData, program.stringTable, obj_type);
-            Push(c);
+            int stack_offset = *(int*)instructionData;
+            instructionData += sizeof(int);
+            LoxObject place_holder;
+            place_holder.type = LoxType::NIL;
+            place_holder.value.data = nullptr;
+            Push(place_holder);
+            break;
+        }
+        case OpCodes::SET_LOCAL_VARIABLE:
+        {
+            int stack_offset = *(int*)instructionData;
+            instructionData += sizeof(int);
+            LoxObject obj = Pop();
+            this->stack[this->stack_base + stack_offset] = obj;
+            break;
+        }
+        case OpCodes::GET_LOCAL_VARIABLE:
+        {
+            int stack_offset = *(int*)instructionData;
+            instructionData += sizeof(int);
+            LoxObject obj = this->stack[this->stack_base + stack_offset];
+            Push(obj);
             break;
         }
         case OpCodes::SUBTRACT:
@@ -85,8 +110,25 @@ void VirtualMachine::Execute(InstructionSequence program)
             printLoxObject(Pop());
             cout << endl;
             break;
+        case OpCodes::START_FRAME:
+        {
+            LoxObject previousFrame;
+            previousFrame.type = LoxType::NUMBER;
+            previousFrame.value.number = stack_base;
+            Push(previousFrame);
+            stack_base = stack.size();
+            break;
+        }
+        case OpCodes::END_FRAME:
+        {
+            stack.erase(stack.begin() + stack_base, stack.end());
+            LoxObject previousFrame = stack[stack.size() - 1];
+            stack_base = previousFrame.value.number;
+            stack.pop_back();
+            break;
+        }
         default:
-            cout << "Unsupported instruction by VM!!!! \n";
+            cout << "VM ERROR: Unsupported instruction by VM!!!! \n";
             exit(-1);
             break;
         }
@@ -96,21 +138,21 @@ void VirtualMachine::Execute(InstructionSequence program)
 
 LoxObject VirtualMachine::Pop()
 {
-    LoxObject top = stack.top();
-    stack.pop();
+    LoxObject top = stack.back();
+    stack.pop_back();
     return top;
 }
 
 void VirtualMachine::Push(LoxObject obj)
 {
-    stack.push(obj);
+    stack.push_back(obj);
 }
 
 op_type VirtualMachine::select_op(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand)
 {
-    if (leftOperand.type == LoxType::VALUE && rightOperand.type == LoxType::VALUE) return number_resolver(opcode, leftOperand, rightOperand);
+    if (leftOperand.type == LoxType::NUMBER && rightOperand.type == LoxType::NUMBER) return number_resolver(opcode, leftOperand, rightOperand);
     if (leftOperand.type == LoxType::STRING && rightOperand.type == LoxType::STRING) return string_resolver(opcode, leftOperand, rightOperand);
-    cout << "Incorrect combination of operands \n";
+    cout << "VM ERROR: Incorrect combination of operands \n";
     exit(-1);
 }
 
@@ -127,7 +169,7 @@ op_type VirtualMachine::number_resolver(OpCodes opcode, const LoxObject& leftOpe
     case OpCodes::MULTIPLY:
         return multiply_number;
     default:
-        cout << "Unsupported number OP\n";
+        cout << "VM ERROR: Unsupported number OP\n";
         exit(-1);
         break;
     }
@@ -140,7 +182,7 @@ op_type VirtualMachine::string_resolver(OpCodes opcode, const LoxObject& leftOpe
     case OpCodes::ADD:
         return concat_strings;
     default:
-        cout << "Unsupported string OP\n";
+        cout << "VM ERROR: Unsupported string OP\n";
         exit(-1);
         break;
     }
@@ -151,7 +193,7 @@ void VirtualMachine::InsertGlobal(char* string, LoxObject obj)
     unordered_map <std::string, LoxObject>::iterator pos = globals.find(string);
     if (pos != globals.cend())
     {
-        cout << "ERROR Redefinition of element \n";
+        cout << "VM ERROR: Redefinition of element \n";
         exit(-1);
     }
     globals.insert({ string, obj });
@@ -162,7 +204,7 @@ LoxObject VirtualMachine::GetGlobal(char* string)
     unordered_map <std::string, LoxObject>::iterator pos = globals.find(string);
     if (pos == globals.cend())
     {
-        cout << "ERROR Uknown element \n";
+        cout << "VM ERROR: Uknown element \n";
         exit(-1);
     }
     return pos->second;
@@ -179,10 +221,10 @@ LoxObject VirtualMachine::LoadObject(char** instructionData, char** stringTable,
         c.value.data = nullptr;
         return c;
     }
-    case 1:
+    case 1: 
     {
         LoxObject c;
-        c.type = LoxType::VALUE;
+        c.type = LoxType::NUMBER;
         c.value.data = new double;
         c.value.number = AS_DOUBLE(*instructionData);
         *instructionData += sizeof(double);

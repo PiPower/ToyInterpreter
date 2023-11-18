@@ -1,7 +1,15 @@
-var x = 4* 3 / 5;
+var x =4;
+{
+	var y = 2.3421;
+	var z = 20;
+	{
+		var z = 9;
+		print z;
+	}
+	print z;
+}
 
 //x = 2314;
-print x/ 30;
 print "L" + "xD";
 
 x = 2.6;

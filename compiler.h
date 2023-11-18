@@ -3,6 +3,9 @@
 #include <string>
 #include "LoxObject.h"
 #include "parser.h"
+#include <unordered_map>
+#include <vector>
+#include <string>
 
 enum class OpCodes;
 struct InstructionSequence
@@ -20,6 +23,8 @@ struct InstructionSequence
 struct CompilationMeta
 {
 	int scope;
+	// for globals int is index in string table, for local offset from begging of the stack
+	std::vector<std::unordered_map< std::string, int>> scope_variables;
 };
 InstructionSequence compile(const std::string& source);
 InstructionSequence backend(const std::vector<AstNode*>& AstSequence);
@@ -40,7 +45,12 @@ enum class OpCodes
 	EQUAL,
 	DEFINE_GLOBAL_VARIABLE,
 	SET_GLOBAL_VARIABLE,
-	GET_GLOBAL_VARIABLE
+	GET_GLOBAL_VARIABLE,
+	DEFINE_LOCAL_VARIABLE,
+	SET_LOCAL_VARIABLE,
+	GET_LOCAL_VARIABLE,
+	START_FRAME,
+	END_FRAME
 };
 
 #endif // !COMPILER

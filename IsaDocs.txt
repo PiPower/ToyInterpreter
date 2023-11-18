@@ -1,5 +1,5 @@
 This file contains all the opcodes and descriptions
-for VM that supports functional subset of lox
+for stack based VM that supports functional subset of lox
 ----------------------------------------
 Name; Description, byte structure
 ---------------------------------------
@@ -18,7 +18,11 @@ SUBTRACT,
 MULTIPLY; Calculat mentioned op. First pop both operands from stack then performorms op and pushes result onto stack; op_code(2 byte)
 PRINT; pop 1st lox object from stack and print it; op_code(2 byte)
 EQUAL; pop 1st lox object from stack and assign it to specified global or local; op_code(2 byte)|string_index(4 byte int)
-DEFINE GLOBAL VARIABLE; sets name of variable in string table, then stores index to that string;  op_code(2 byte)|string_index(4 byte int)
-DEFINE GLOBAL VARIABLE; creates placeholder for name in global table, name is stored in string table; op_code(2 byte)|string_index(4 byte int)
+DEFINE GLOBAL VARIABLE; creates NIL variable for name in global table, name is stored in string table; op_code(2 byte)|string_index(4 byte int)
 SET GLOBAL VARIABLE; assigns new value to global object; op_code(2 byte)|string_index(4 byte int)
 GET GLOBAL VARIABLE; pushes given global onto stack; op_code(2 byte)|string_index(4 byte int)
+DEFINE LOCAL VARIABLE; pushes NIL variable onto top of the stack; op_code(2 byte)|unused(4 byte)
+SET LOCAL VARIABLE; assigns new value to object at pos = stack_base + stack_offset; op_code(2 byte)|stack_offset(4 byte int)
+GET LOCAL VARIABLE; pushes object from stack at pos = stack_base + stack_offset onto top of the stack; op_code(2 byte)|stack_offset(4 byte int)
+START FRAME; changes stack base onto top of the stack; op_code(2 byte)
+END FRAME; restores stack base onto previous top value; op_code(2 byte)
