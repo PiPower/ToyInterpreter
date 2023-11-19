@@ -80,7 +80,7 @@ AstNode* primary(const std::vector<Token>& tokens, int& index)
 		}
 		case TokenType::NIL:
 		{
-			node->type = AstNodeType::LOGICAL;
+			node->type = AstNodeType::NIL;
 			node->data = nullptr; // convert to null;
 			index++;
 			return node;
@@ -564,6 +564,7 @@ string createStringTree(AstRoot* node, string propagate = "")
 	case AstNodeType::NUMBER:
 		return to_string(*(double*)node->data);
 	case AstNodeType::NIL:
+		return "NIL";
 	case AstNodeType::IDENTIFIER:
 	case AstNodeType::STRING:
 		return *(string*)node->data;
