@@ -1,9 +1,9 @@
-var x =4;
+var x = !true;
 {
 	var y = 2.3421;
 	var z = 20.12343;
 	{
-		var z = z;
+		var z = x;
 		print z;
 		print x;
 	}

@@ -9,6 +9,12 @@ void printLoxObject(const LoxObject& obj)
 	case LoxType::NIL:
 		cout << "NIL";
 		break;
+	case LoxType::BOOL:
+	{
+		string text = obj.value.boolean ? "True" : "False";
+		cout << text;
+		break;
+	}
 	case LoxType::NUMBER:
 		cout << obj.value.number;
 		break;

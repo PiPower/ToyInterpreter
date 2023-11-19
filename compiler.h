@@ -50,7 +50,8 @@ enum class OpCodes
 	SET_LOCAL_VARIABLE,
 	GET_LOCAL_VARIABLE,
 	START_FRAME,
-	END_FRAME
+	END_FRAME,
+	NOT
 };
 
 #endif // !COMPILER

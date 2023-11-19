@@ -124,7 +124,7 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         auto object = metaData.scope_variables[0].find(((string*)root->data)->c_str());
         if (object == metaData.scope_variables[0].end())
         {
-            cout << "BACKEND ERROR: UKNOWN VARIABLE !!!" << endl;
+            cout << "BACKEND ERROR: Unknown variable" << endl;
             exit(-1);
         }
         int index = object->second;
@@ -231,6 +231,10 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
 
         metaData.scope_variables.pop_back();
         metaData.scope -= 1;
+        break;
+    case AstNodeType::OP_BANG:
+        dispatch(root->children[0], program, metaData);
+        EmitInstruction(OpCodes::NOT, program);
         break;
     default:
         cout << "BACKEND ERROR: Unsupported instruction !!!!" << endl;

@@ -26,3 +26,4 @@ SET LOCAL VARIABLE; assigns new value to object at pos = stack_base + stack_offs
 GET LOCAL VARIABLE; pushes object from stack at pos = stack_base + stack_offset onto top of the stack; op_code(2 byte)|stack_offset(4 byte int)
 START FRAME; changes stack base onto top of the stack; op_code(2 byte)
 END FRAME; restores stack base onto previous top value; op_code(2 byte)
+NOT; pop value from stack and negate it; op_code(2 byte)

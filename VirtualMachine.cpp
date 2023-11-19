@@ -127,6 +127,12 @@ void VirtualMachine::Execute(InstructionSequence program)
             stack.pop_back();
             break;
         }
+        case OpCodes::NOT:
+        {
+            LoxObject obj = Pop();
+            Push(isFalsey(obj));
+            break;
+        }
         default:
             cout << "VM ERROR: Unsupported instruction by VM!!!! \n";
             exit(-1);
@@ -235,7 +241,7 @@ LoxObject VirtualMachine::LoadObject(char** instructionData, char** stringTable,
         LoxObject c;
         c.type = LoxType::BOOL;
         c.value.boolean = *(bool*)(*instructionData);
-        *instructionData += sizeof(double);
+        *instructionData += sizeof(bool);
         return c;
     }
     case 3:
@@ -264,6 +270,17 @@ void VirtualMachine::UpdateGlobal(char* string, LoxObject obj)
         exit(-1);
     }
     pos->second = obj;
+}
+
+LoxObject VirtualMachine::isFalsey(LoxObject& obj)
+{
+    LoxObject result;
+    result.type = LoxType::BOOL;
+    result.value.boolean = true;
+    if(obj.type== LoxType::NIL) result.value.boolean = false;
+    if (obj.type == LoxType::BOOL) result.value.boolean = obj.value.boolean;
+    result.value.boolean = !result.value.boolean;
+    return result;
 }
 
 

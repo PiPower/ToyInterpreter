@@ -23,6 +23,7 @@ private:
 	LoxObject LoadObject(char** instructionData, char** stringTable, char type);
 	void RemoveGlobal(char* string, LoxObject obj);
 	void UpdateGlobal(char* string, LoxObject obj);
+	LoxObject isFalsey(LoxObject& obj);
 private:
 	int stack_base;
 	std::vector<LoxObject> stack;
