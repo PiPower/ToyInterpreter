@@ -17,6 +17,8 @@ OpCodes AstNodeTypeToOpCode(AstNodeType node_typ)
         return OpCodes::SUBTRACT;
     case AstNodeType::OP_MUL:
         return OpCodes::MULTIPLY;
+    case AstNodeType::OP_EQUAL_EQUAL:
+        return OpCodes::EQUAL;
     default:
         cout << "BACKEND ERROR: Unsupported translation" << endl;
         exit(-1);
@@ -195,6 +197,7 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         EmitInstructionWithPayload(OpCodes::PUSH_IMMIDIATE, program, payload, sizeof(int) + 1);
     }
         break;
+    case AstNodeType::OP_EQUAL_EQUAL:
     case AstNodeType::OP_SUBTRACT:
     case AstNodeType::OP_MUL:
     case AstNodeType::OP_DIVIDE:

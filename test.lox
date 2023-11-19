@@ -1,3 +1,9 @@
+var l = "YOLO";
+var b = "";
+var c = "YOLO";
+print l == c;
+print l == b;
+
 var x = !true;
 {
 	var y = 2.3421;

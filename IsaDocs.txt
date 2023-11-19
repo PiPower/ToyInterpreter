@@ -17,7 +17,9 @@ DIVIDE,
 SUBTRACT,
 MULTIPLY; calculate mentioned op. First pop both operands from stack then performorms op and pushes result onto stack; op_code(2 byte)
 PRINT; pop 1st lox object from stack and print it; op_code(2 byte)
-EQUAL; pop 1st lox object from stack and assign it to specified global or local; op_code(2 byte)|string_index(4 byte int)
+
+EQUAL; 
+
 DEFINE GLOBAL VARIABLE; creates NIL variable for name in global table, name is stored in string table; op_code(2 byte)|string_index(4 byte int)
 SET GLOBAL VARIABLE; assigns new value to global object; op_code(2 byte)|string_index(4 byte int)
 GET GLOBAL VARIABLE; pushes given global onto stack; op_code(2 byte)|string_index(4 byte int)

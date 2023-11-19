@@ -5,6 +5,13 @@
 #include <unordered_map>
 #include "LoxObject.h"
 #include "compiler.h"
+/*
+Important note.
+Currently VM leakes memory due to lack of proper memory management.
+TODO: Add garbage collector
+*/
+
+
 void compile_and_execute(const std::string& source);
 
 class VirtualMachine
@@ -16,8 +23,9 @@ public:
 	void Push(LoxObject obj);
 private:
 	op_type select_op(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand);
-	op_type number_resolver(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand);
-	op_type string_resolver(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand);
+	op_type number_resolver(OpCodes opcode);
+	op_type string_resolver(OpCodes opcode);
+	op_type logical_resolver(OpCodes opcode);
 	void InsertGlobal(char* string, LoxObject obj);
 	LoxObject GetGlobal(char* string);
 	LoxObject LoadObject(char** instructionData, char** stringTable, char type);

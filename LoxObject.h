@@ -33,6 +33,7 @@ LoxObject add_number(const LoxObject& leftOperand, const LoxObject& rightOperand
 LoxObject subtract_number(const LoxObject& leftOperand, const LoxObject& rightOperand);
 LoxObject multiply_number(const LoxObject& leftOperand, const LoxObject& rightOperand);
 LoxObject divide_number(const LoxObject& leftOperand, const LoxObject& rightOperand);
+LoxObject equalValues(const LoxObject& leftOperand, const LoxObject& rightOperand);
 //string ops
 LoxObject concat_strings(const LoxObject& leftOperand, const LoxObject& rightOperand);
 

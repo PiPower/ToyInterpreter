@@ -89,6 +89,7 @@ void VirtualMachine::Execute(InstructionSequence program)
             Push(obj);
             break;
         }
+        case OpCodes::EQUAL:
         case OpCodes::SUBTRACT:
         case OpCodes::MULTIPLY:
         case OpCodes::DIVIDE:
@@ -101,13 +102,14 @@ void VirtualMachine::Execute(InstructionSequence program)
             op = select_op(instructionCode, a , b);
             c = op(a, b);
 
-            FreeLoxObject(a);
-            FreeLoxObject(b);
+            //FreeLoxObject(a);
+            //FreeLoxObject(b);
             Push(c);
             break;
         }
         case OpCodes::PRINT:
-            printLoxObject(Pop());
+            LoxObject obj = Pop();
+            printLoxObject(obj);
             cout << endl;
             break;
         case OpCodes::START_FRAME:
@@ -156,13 +158,14 @@ void VirtualMachine::Push(LoxObject obj)
 
 op_type VirtualMachine::select_op(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand)
 {
-    if (leftOperand.type == LoxType::NUMBER && rightOperand.type == LoxType::NUMBER) return number_resolver(opcode, leftOperand, rightOperand);
-    if (leftOperand.type == LoxType::STRING && rightOperand.type == LoxType::STRING) return string_resolver(opcode, leftOperand, rightOperand);
+    if (opcode == OpCodes::EQUAL) return logical_resolver(opcode);
+    if (leftOperand.type == LoxType::NUMBER && rightOperand.type == LoxType::NUMBER) return number_resolver(opcode);
+    if (leftOperand.type == LoxType::STRING && rightOperand.type == LoxType::STRING) return string_resolver(opcode);
     cout << "VM ERROR: Incorrect combination of operands \n";
     exit(-1);
 }
 
-op_type VirtualMachine::number_resolver(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand)
+op_type VirtualMachine::number_resolver(OpCodes opcode)
 {
     switch (opcode)
     {
@@ -181,7 +184,7 @@ op_type VirtualMachine::number_resolver(OpCodes opcode, const LoxObject& leftOpe
     }
 }
 
-op_type VirtualMachine::string_resolver(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand)
+op_type VirtualMachine::string_resolver(OpCodes opcode)
 {
     switch (opcode)
     {
@@ -190,6 +193,17 @@ op_type VirtualMachine::string_resolver(OpCodes opcode, const LoxObject& leftOpe
     default:
         cout << "VM ERROR: Unsupported string OP\n";
         exit(-1);
+        break;
+    }
+}
+
+op_type VirtualMachine::logical_resolver(OpCodes opcode)
+{
+    switch (opcode)
+    {
+    case OpCodes::EQUAL:
+        return equalValues;
+    default:
         break;
     }
 }
