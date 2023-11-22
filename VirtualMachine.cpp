@@ -147,6 +147,14 @@ void VirtualMachine::Execute(InstructionSequence program)
             if (isFalsey(obj).value.boolean) instructionData += jump_offset;
             break;
         }
+        case OpCodes::JUMP:
+        {
+            int jump_offset = *(int*)instructionData;
+            instructionData += sizeof(int);
+
+            instructionData += jump_offset;
+            break;
+        }
         default:
             cout << "VM ERROR: Unsupported instruction by VM!!!! \n";
             exit(-1);

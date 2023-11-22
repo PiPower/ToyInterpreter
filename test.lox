@@ -4,11 +4,11 @@ if( x == 1)
 {
 	print "HEJ";
 }
-//else if( x == 4)
-//{
-	//print "PAD";
-//}
-//else {
-	//print "Incorrect number";
-//}
+else if( x == 2)
+{
+	print "PAD";
+}
+else {
+	print "Incorrect number";
+}
 print "FIN";

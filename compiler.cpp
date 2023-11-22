@@ -258,12 +258,22 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
     {
         dispatch(root->children[0], program, metaData);
         char addr[4] = { 0xff, 0xff, 0xff, 0xff };
-        EmitInstructionWithPayload(OpCodes::JUMP_IF_FALSE, program, addr, sizeof(addr));
+        EmitInstructionWithPayload(OpCodes::JUMP_IF_FALSE, program, addr, sizeof(addr)); // jump to the next block
         int jump_base = program.instruction_offset;
+
         dispatch(root->children[1], program, metaData);
-        //dispatch(root->children[2], program, metaData);
+        EmitInstructionWithPayload(OpCodes::JUMP, program, addr, sizeof(addr)); // jump out off if-s
         int jump_size = program.instruction_offset - jump_base;
         *(int*)(program.instruction - jump_size - sizeof(int) ) = jump_size;
+
+        const int out_of_block_jump_base = program.instruction_offset;;
+        if (root->children.size() == 3)
+        {
+            dispatch(root->children[2], program, metaData);
+        }
+
+        jump_size = program.instruction_offset - out_of_block_jump_base;
+        *(int*)(program.instruction - jump_size - sizeof(int)) = jump_size;
         break;
     }
     default:
