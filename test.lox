@@ -1,10 +1,6 @@
-var l = "YOLO";
-var b = "";
-var c = "YOLO";
-print l == c;
-print l == b;
-
-var x = !true;
+var x = 2;
+var y = 6;
+print x <= y;
 {
 	var y = 2.3421;
 	var z = 20.12343;

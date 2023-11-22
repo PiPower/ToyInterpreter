@@ -61,7 +61,124 @@ LoxObject divide_number(const LoxObject& leftOperand, const LoxObject& rightOper
 	return c;
 }
 
-LoxObject equalValues(const LoxObject& leftOperand, const LoxObject& rightOperand)
+
+LoxObject notEqualValue(const LoxObject& leftOperand, const LoxObject& rightOperand)
+{
+
+	if (leftOperand.type != rightOperand.type)
+	{
+		cout << "ERROR: Not matching types \n";
+		exit(-1);
+	}
+	LoxObject out;
+	out.type = LoxType::BOOL;
+	switch (leftOperand.type)
+	{
+	case LoxType::NIL:
+		out.value.boolean = false;
+		break;
+	case LoxType::BOOL:
+		out.value.boolean = !(leftOperand.value.boolean == rightOperand.value.boolean);
+		break;
+	case LoxType::NUMBER:
+		out.value.boolean = !(leftOperand.value.number == rightOperand.value.number);
+		break;
+	case LoxType::STRING:
+		int left_size = strlen((char*)leftOperand.value.data);
+		int right_size = strlen((char*)rightOperand.value.data);
+		if (left_size != right_size)
+		{
+			out.value.boolean = true;
+			break;
+		}
+		out.value.boolean = !(memcmp(leftOperand.value.data, rightOperand.value.data, right_size) == 0);
+		break;
+	}
+	return out;
+}
+
+LoxObject lessEqualValue(const LoxObject& leftOperand, const LoxObject& rightOperand)
+{
+
+	if (leftOperand.type != rightOperand.type)
+	{
+		cout << "ERROR: Not matching types \n";
+		exit(-1);
+	}
+
+	if (leftOperand.type != LoxType::NUMBER)
+	{
+		cout << "ERROR: types must be numbers \n";
+		exit(-1);
+	}
+
+	LoxObject out;
+	out.type = LoxType::BOOL;
+	out.value.boolean = leftOperand.value.number <= rightOperand.value.number;
+	return out;
+}
+
+LoxObject lessValue(const LoxObject& leftOperand, const LoxObject& rightOperand)
+{
+	if (leftOperand.type != rightOperand.type)
+	{
+		cout << "ERROR: Not matching types \n";
+		exit(-1);
+	}
+
+	if (leftOperand.type != LoxType::NUMBER)
+	{
+		cout << "ERROR: types must be numbers \n";
+		exit(-1);
+	}
+
+	LoxObject out;
+	out.type = LoxType::BOOL;
+	out.value.boolean = leftOperand.value.number < rightOperand.value.number;
+	return out;
+}
+
+LoxObject greaterEqualValue(const LoxObject& leftOperand, const LoxObject& rightOperand)
+{
+	if (leftOperand.type != rightOperand.type)
+	{
+		cout << "ERROR: Not matching types \n";
+		exit(-1);
+	}
+
+	if (leftOperand.type != LoxType::NUMBER)
+	{
+		cout << "ERROR: types must be numbers \n";
+		exit(-1);
+	}
+
+	LoxObject out;
+	out.type = LoxType::BOOL;
+	out.value.boolean = leftOperand.value.number >= rightOperand.value.number;
+	return out;
+}
+
+LoxObject greaterValue(const LoxObject& leftOperand, const LoxObject& rightOperand)
+{
+	if (leftOperand.type != rightOperand.type)
+	{
+		cout << "ERROR: Not matching types \n";
+		exit(-1);
+	}
+
+	if (leftOperand.type != LoxType::NUMBER)
+	{
+		cout << "ERROR: types must be numbers \n";
+		exit(-1);
+	}
+
+	LoxObject out;
+	out.type = LoxType::BOOL;
+	out.value.boolean = leftOperand.value.number > rightOperand.value.number;
+	return out;
+}
+
+LoxObject equalValue(const LoxObject& leftOperand, const LoxObject& rightOperand)
 {
 	if (leftOperand.type != rightOperand.type)
 	{

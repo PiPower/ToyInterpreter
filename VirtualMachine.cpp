@@ -89,6 +89,11 @@ void VirtualMachine::Execute(InstructionSequence program)
             Push(obj);
             break;
         }
+        case OpCodes::LESS_EQUAL:
+        case OpCodes::LESS:
+        case OpCodes::GREATER_EQUAL:
+        case OpCodes::GREATER:
+        case OpCodes::NOT_EQUAL:
         case OpCodes::EQUAL:
         case OpCodes::SUBTRACT:
         case OpCodes::MULTIPLY:
@@ -102,8 +107,6 @@ void VirtualMachine::Execute(InstructionSequence program)
             op = select_op(instructionCode, a , b);
             c = op(a, b);
 
-            //FreeLoxObject(a);
-            //FreeLoxObject(b);
             Push(c);
             break;
         }
@@ -158,7 +161,13 @@ void VirtualMachine::Push(LoxObject obj)
 
 op_type VirtualMachine::select_op(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand)
 {
-    if (opcode == OpCodes::EQUAL) return logical_resolver(opcode);
+    if (opcode ==  OpCodes::LESS_EQUAL ||
+        opcode ==  OpCodes::LESS ||
+        opcode ==  OpCodes::GREATER_EQUAL ||
+        opcode ==  OpCodes::GREATER ||
+        opcode ==  OpCodes::NOT_EQUAL ||
+        opcode ==  OpCodes::EQUAL) return logical_resolver(opcode);
+
     if (leftOperand.type == LoxType::NUMBER && rightOperand.type == LoxType::NUMBER) return number_resolver(opcode);
     if (leftOperand.type == LoxType::STRING && rightOperand.type == LoxType::STRING) return string_resolver(opcode);
     cout << "VM ERROR: Incorrect combination of operands \n";
@@ -202,9 +211,21 @@ op_type VirtualMachine::logical_resolver(OpCodes opcode)
     switch (opcode)
     {
     case OpCodes::EQUAL:
-        return equalValues;
+        return equalValue;
+    case OpCodes::NOT_EQUAL:
+        return notEqualValue;
+    case OpCodes::LESS_EQUAL:
+        return lessEqualValue;
+    case OpCodes::LESS:
+        return lessValue;
+    case OpCodes::GREATER_EQUAL:
+        return greaterEqualValue;
+    case OpCodes::GREATER:
+        return greaterValue;
+
     default:
-        break;
+        cout <<"VM ERROR: Unsupported logical operation" << endl;
+        exit(-1);
     }
 }
 
@@ -268,7 +289,7 @@ LoxObject VirtualMachine::LoadObject(char** instructionData, char** stringTable,
         return c;
     }
     default:
-        cout << "ERROR uknown lox type" << endl;
+        cout << "VM ERROR: uknown lox type" << endl;
         exit(-1);
     }
 }
@@ -280,7 +301,7 @@ void VirtualMachine::UpdateGlobal(char* string, LoxObject obj)
     unordered_map <std::string, LoxObject>::iterator pos = globals.find(string);
     if (pos == globals.cend())
     {
-        cout << "ERROR Uknown element \n";
+        cout << "VM ERROR: Uknown element \n";
         exit(-1);
     }
     pos->second = obj;

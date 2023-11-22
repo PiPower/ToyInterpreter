@@ -33,7 +33,13 @@ LoxObject add_number(const LoxObject& leftOperand, const LoxObject& rightOperand
 LoxObject subtract_number(const LoxObject& leftOperand, const LoxObject& rightOperand);
 LoxObject multiply_number(const LoxObject& leftOperand, const LoxObject& rightOperand);
 LoxObject divide_number(const LoxObject& leftOperand, const LoxObject& rightOperand);
-LoxObject equalValues(const LoxObject& leftOperand, const LoxObject& rightOperand);
+//logical_ops;
+LoxObject equalValue(const LoxObject& leftOperand, const LoxObject& rightOperand);
+LoxObject notEqualValue(const LoxObject& leftOperand, const LoxObject& rightOperand);
+LoxObject lessEqualValue(const LoxObject& leftOperand, const LoxObject& rightOperand);
+LoxObject lessValue(const LoxObject& leftOperand, const LoxObject& rightOperand);
+LoxObject greaterEqualValue(const LoxObject& leftOperand, const LoxObject& rightOperand);
+LoxObject greaterValue(const LoxObject& leftOperand, const LoxObject& rightOperand);
 //string ops
 LoxObject concat_strings(const LoxObject& leftOperand, const LoxObject& rightOperand);
 
