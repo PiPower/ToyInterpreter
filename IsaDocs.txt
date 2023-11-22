@@ -12,6 +12,7 @@ PUSH IMMIDITE; Push immidiate of type specified by 1byte char onto the stack; op
 	STRING(3) : index(4 byte int)
 POP; pop value from stack; op_code(2 byte)
 PUSH; push value onto stack; op_code(2 byte)
+NEGATE; pop value from stack, negate it and push back; op_code(2 byte)
 EQUAL
 NOT_EQUAL,
 GREATER,
@@ -32,3 +33,6 @@ GET LOCAL VARIABLE; pushes object from stack at pos = stack_base + stack_offset 
 START FRAME; changes stack base onto top of the stack; op_code(2 byte)
 END FRAME; restores stack base onto previous top value; op_code(2 byte)
 NOT; pop value from stack and negate it and push back; op_code(2 byte)
+
+JUMP;
+JUMP_IF_FALSE;

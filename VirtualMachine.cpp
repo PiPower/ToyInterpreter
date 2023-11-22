@@ -28,6 +28,18 @@ void VirtualMachine::Execute(InstructionSequence program)
         {
         case OpCodes::EXIT:
             return;
+        case OpCodes::NEGATE:
+        {
+            LoxObject obj = Pop();
+            if (obj.type != LoxType::NUMBER)
+            {
+                cout << "VM ERROR: cannot negate non-number types \n";
+                exit(-1);
+            }
+            obj.value.number = -obj.value.number;
+            Push(obj);
+            break;
+        }
         case OpCodes::PUSH_IMMIDIATE:
         {
             char obj_type = *instructionData;
@@ -111,10 +123,12 @@ void VirtualMachine::Execute(InstructionSequence program)
             break;
         }
         case OpCodes::PRINT:
+        {
             LoxObject obj = Pop();
             printLoxObject(obj);
             cout << endl;
             break;
+        }
         case OpCodes::START_FRAME:
         {
             LoxObject previousFrame;

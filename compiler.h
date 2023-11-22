@@ -37,6 +37,7 @@ enum class OpCodes
 	PUSH_IMMIDIATE,
 	POP,
 	PUSH,
+	NEGATE,
 	ADD,
 	DIVIDE,
 	SUBTRACT,

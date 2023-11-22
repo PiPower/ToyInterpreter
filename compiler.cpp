@@ -190,6 +190,10 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         EmitInstructionWithPayload(OpCodes::PUSH_IMMIDIATE, program, &payload, sizeof(bool) + 1);
         break;
     }
+    case AstNodeType::OP_NEGATE:
+        dispatch(root->children[0], program, metaData);
+        EmitInstruction(OpCodes::NEGATE, program);
+        break;
     case AstNodeType::NIL:
     {
         char payload;
