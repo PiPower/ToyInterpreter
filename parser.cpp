@@ -611,11 +611,11 @@ string createStringTree(AstRoot* node, string propagate = "")
 	case AstNodeType::OP_IF:
 	{
 		string out = "";
-		string Else = (node->children[2]->type == AstNodeType::BLOCK) ? "ELSE \n" : "";
+		string Else = (node->children.size() == 3) ? "ELSE \n" : "";
 		out += *(string*)node->data + children_strings[0];
 		int i = 1;
 		out += '\n' + children_strings[1];
-		out += '\n' + Else+ children_strings[2];
+		out += (node->children.size() == 3) ?  '\n' + Else+ children_strings[2] : "";
 
 		return out;
 	}

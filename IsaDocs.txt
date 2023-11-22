@@ -12,14 +12,17 @@ PUSH IMMIDITE; Push immidiate of type specified by 1byte char onto the stack; op
 	STRING(3) : index(4 byte int)
 POP; pop value from stack; op_code(2 byte)
 PUSH; push value onto stack; op_code(2 byte)
+EQUAL
+NOT_EQUAL,
+GREATER,
+GREATER_EQUAL,
+LESS,
+LESS_EQUAL,
 ADD,
 DIVIDE,
 SUBTRACT,
 MULTIPLY; calculate mentioned op. First pop both operands from stack then performorms op and pushes result onto stack; op_code(2 byte)
 PRINT; pop 1st lox object from stack and print it; op_code(2 byte)
-
-EQUAL; 
-
 DEFINE GLOBAL VARIABLE; creates NIL variable for name in global table, name is stored in string table; op_code(2 byte)|string_index(4 byte int)
 SET GLOBAL VARIABLE; assigns new value to global object; op_code(2 byte)|string_index(4 byte int)
 GET GLOBAL VARIABLE; pushes given global onto stack; op_code(2 byte)|string_index(4 byte int)
@@ -28,4 +31,4 @@ SET LOCAL VARIABLE; assigns new value to object at pos = stack_base + stack_offs
 GET LOCAL VARIABLE; pushes object from stack at pos = stack_base + stack_offset onto top of the stack; op_code(2 byte)|stack_offset(4 byte int)
 START FRAME; changes stack base onto top of the stack; op_code(2 byte)
 END FRAME; restores stack base onto previous top value; op_code(2 byte)
-NOT; pop value from stack and negate it; op_code(2 byte)
+NOT; pop value from stack and negate it and push back; op_code(2 byte)

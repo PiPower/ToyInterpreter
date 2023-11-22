@@ -254,6 +254,18 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         dispatch(root->children[0], program, metaData);
         EmitInstruction(OpCodes::NOT, program);
         break;
+    case AstNodeType::OP_IF:
+    {
+        dispatch(root->children[0], program, metaData);
+        char addr[4] = { 0xff, 0xff, 0xff, 0xff };
+        EmitInstructionWithPayload(OpCodes::JUMP_IF_FALSE, program, addr, sizeof(addr));
+        int jump_base = program.instruction_offset;
+        dispatch(root->children[1], program, metaData);
+        //dispatch(root->children[2], program, metaData);
+        int jump_size = program.instruction_offset - jump_base;
+        *(int*)(program.instruction - jump_size - sizeof(int) ) = jump_size;
+        break;
+    }
     default:
         cout << "BACKEND ERROR: Unsupported instruction !!!!" << endl;
         exit(-1);

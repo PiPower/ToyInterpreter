@@ -1,32 +1,14 @@
 var x = 2;
 var y = 6;
-print x <= y;
+if( x == 1)
 {
-	var y = 2.3421;
-	var z = 20.12343;
-	{
-		var z = x;
-		print z;
-		print x;
-	}
-	print z;
+	print "HEJ";
 }
-
-//x = 2314;
-print "L" + "xD";
-
-x = 2.6;
-print x * 4.12124 /2.6;
-print 2* 9;
-
-//fun yolo()
+//else if( x == 4)
 //{
-//	print a + b+ x;
-//	return 4;
+	//print "PAD";
 //}
-//yolo(4 * 4 , 5, 6)(x * 3, y<2);
-//
-//for(var i = 2*2; i < 10; i = i + 2)
-//{
-//	print i;
+//else {
+	//print "Incorrect number";
 //}
+print "FIN";

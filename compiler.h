@@ -57,6 +57,8 @@ enum class OpCodes
 	START_FRAME,
 	END_FRAME,
 	NOT,
+	JUMP,
+	JUMP_IF_FALSE
 };
 
 #endif // !COMPILER

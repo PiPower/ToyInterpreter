@@ -138,6 +138,15 @@ void VirtualMachine::Execute(InstructionSequence program)
             Push(isFalsey(obj));
             break;
         }
+        case OpCodes::JUMP_IF_FALSE:
+        {
+            int jump_offset = *(int*)instructionData;
+            instructionData += sizeof(int);
+            LoxObject obj = Pop();
+
+            if (isFalsey(obj).value.boolean) instructionData += jump_offset;
+            break;
+        }
         default:
             cout << "VM ERROR: Unsupported instruction by VM!!!! \n";
             exit(-1);
@@ -222,7 +231,6 @@ op_type VirtualMachine::logical_resolver(OpCodes opcode)
         return greaterEqualValue;
     case OpCodes::GREATER:
         return greaterValue;
-
     default:
         cout <<"VM ERROR: Unsupported logical operation" << endl;
         exit(-1);
