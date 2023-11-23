@@ -256,10 +256,10 @@ AstNode* logic_and(const std::vector<Token>& tokens, int& index)
 	while (match({ TokenType::AND }, tokens, index))
 	{
 		Token previous = tokens[index - 1];
-		AstNode* left = equality(tokens, index);
+		AstNode* right = equality(tokens, index);
 		AstNode* new_parent = new AstNode();
-		new_parent->children.push_back(left);
 		new_parent->children.push_back(parent);
+		new_parent->children.push_back(right);
 		new_parent->data = new string();
 
 		*(string*)new_parent->data = "and";
@@ -275,10 +275,10 @@ AstNode* logic_or(const std::vector<Token>& tokens, int& index)
 	while (match({ TokenType::OR }, tokens, index))
 	{
 		Token previous = tokens[index - 1];
-		AstNode* left = logic_and(tokens, index);
+		AstNode* right = logic_and(tokens, index);
 		AstNode* new_parent = new AstNode();
-		new_parent->children.push_back(left);
 		new_parent->children.push_back(parent);
+		new_parent->children.push_back(right);
 		new_parent->data = new string("or");
 		new_parent->type = AstNodeType::OP_OR;
 		parent = new_parent;
