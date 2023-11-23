@@ -275,7 +275,7 @@ AstNode* logic_or(const std::vector<Token>& tokens, int& index)
 	while (match({ TokenType::OR }, tokens, index))
 	{
 		Token previous = tokens[index - 1];
-		AstNode* left = comparison(tokens, index);
+		AstNode* left = logic_and(tokens, index);
 		AstNode* new_parent = new AstNode();
 		new_parent->children.push_back(left);
 		new_parent->children.push_back(parent);
