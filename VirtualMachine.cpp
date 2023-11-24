@@ -28,6 +28,9 @@ void VirtualMachine::Execute(InstructionSequence program)
         {
         case OpCodes::EXIT:
             return;
+        case OpCodes::POP:
+            Pop();
+            break;
         case OpCodes::NEGATE:
         {
             LoxObject obj = Pop();
@@ -61,7 +64,7 @@ void VirtualMachine::Execute(InstructionSequence program)
         }
         case OpCodes::SET_GLOBAL_VARIABLE:
         {
-            int index = *(int*)instructionData;
+                int index = *(int*)instructionData;
             instructionData += sizeof(int);
             LoxObject obj = Pop();
             UpdateGlobal(program.stringTable[index], obj);
@@ -167,6 +170,16 @@ void VirtualMachine::Execute(InstructionSequence program)
             instructionData += sizeof(int);
 
             instructionData += jump_offset;
+            break;
+        }
+        case OpCodes::JUMP_IF_FALSE_KEEP_STACK:
+        {
+            int jump_offset = *(int*)instructionData;
+            instructionData += sizeof(int);
+            LoxObject obj = Pop();
+
+            if (isFalsey(obj).value.boolean) instructionData += jump_offset;
+            Push(obj);
             break;
         }
         default:

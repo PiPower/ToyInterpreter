@@ -130,9 +130,9 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
                 EmitInstructionWithPayload(OpCodes::GET_LOCAL_VARIABLE, program, &index, sizeof(int));
                 return;
             }
-            total_pos = total_pos - 1 - metaData.scope_variables[i - 1].size();
+            total_pos = total_pos - 1 - metaData.scope_variables[i - 1].size(); // 1 represents previous stack address stored on stack
         }
-
+        // reaching  this point means we look for global
         auto object = metaData.scope_variables[0].find(((string*)root->data)->c_str());
         if (object == metaData.scope_variables[0].end())
         {
@@ -277,6 +277,36 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         }
 
         jump_size = program.instruction_offset - out_of_block_jump_base;
+        *(int*)(program.instruction - jump_size - sizeof(int)) = jump_size;
+        break;
+    }
+    case AstNodeType::OP_AND:
+    {
+        dispatch(root->children[0], program, metaData);
+        char addr[4] = { 0xff, 0xff, 0xff, 0xff };
+        EmitInstructionWithPayload(OpCodes::JUMP_IF_FALSE_KEEP_STACK, program, addr, sizeof(addr)); // jump to the next block
+        int jump_base = program.instruction_offset;
+        EmitInstruction(OpCodes::POP, program); //removes non used variable from stack
+        dispatch(root->children[1], program, metaData);
+        int jump_size = program.instruction_offset - jump_base;
+        *(int*)(program.instruction - jump_size - sizeof(int)) = jump_size;
+        break;
+    }
+    case AstNodeType::OP_OR:
+    {
+        dispatch(root->children[0], program, metaData);
+        char addr[4] = { 0xff, 0xff, 0xff, 0xff };
+        EmitInstructionWithPayload(OpCodes::JUMP_IF_FALSE, program, addr, sizeof(addr)); // jump to the next block
+        int jump_base_if_false = program.instruction_offset;
+
+        EmitInstructionWithPayload(OpCodes::JUMP, program, addr, sizeof(addr)); // jump to the next block
+        int jump_pos = program.instruction_offset;
+
+        int jump_size_if_false = program.instruction_offset - jump_base_if_false;
+        *(int*)(program.instruction - jump_size_if_false - sizeof(int)) = jump_size_if_false;
+        dispatch(root->children[1], program, metaData);
+
+        int jump_size = program.instruction_offset - jump_pos;
         *(int*)(program.instruction - jump_size - sizeof(int)) = jump_size;
         break;
     }

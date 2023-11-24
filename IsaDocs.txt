@@ -1,5 +1,7 @@
 This file contains all the opcodes and descriptions
-for stack based VM that supports functional subset of lox
+for stack based VM that supports functional subset of lox.
+For lox documentation check out:
+https://craftinginterpreters.com/
 ----------------------------------------
 Name; Description, byte structure
 ---------------------------------------
@@ -36,3 +38,4 @@ NOT; pop value from stack and negate it and push back; op_code(2 byte)
 
 JUMP;
 JUMP_IF_FALSE;
+JUMP_IF_FALSE_KEEP_STACK;
