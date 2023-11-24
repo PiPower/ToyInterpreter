@@ -1,10 +1,13 @@
 
 var x = 0;
-
-for(var z = 3; z < 10; z = z+ 1)
 {
-	print "XXXXX";
-	x = x +1;
+	var z = 3;
+	for(; z < 10; z = z +1)
+	{
+		print "XXXXX";
+		x = x +1;
+	}
+	print z;
 }
 print x;
 print "FIN";

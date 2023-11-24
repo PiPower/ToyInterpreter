@@ -355,15 +355,23 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         loop->type = AstNodeType::OP_WHILE;
         loop->data = new string("WHILE");
 
-        FORhead->children.push_back(root->children[0]); // run initializer expression first
+        if (root->children[0] != nullptr)
+            FORhead->children.push_back(root->children[0]); // run initializer expression first
         FORhead->children.push_back(loop);
 
+        if (root->children[1] == nullptr)
+        {
+            root->children[1] = new AstNode();
+            root->children[1]->type = AstNodeType::LOGICAL;
+            root->children[1]->data = new bool(true);
+        }
         loop->children.push_back(root->children[1]); // set loop condition
         for (AstNode* expr : root->children[3]->children)
         {
             loop->children.push_back(expr);
         }
-        loop->children.push_back(root->children[2]); // push increment expression
+        if (root->children[2] != nullptr)
+            loop->children.push_back(root->children[2]); // push increment expression
 
         dispatch(FORhead, program, metaData);
         delete loop;
