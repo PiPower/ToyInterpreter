@@ -229,15 +229,29 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         break;
     case AstNodeType::OP_EQUAL:
     {
-        //currently only supports setting global variables
-        if (root->children[0]->type != AstNodeType::IDENTIFIER)
+        int total_pos = 0;
+        for (int i = metaData.scope; i > 0; i--)
         {
-            cout << "BACKEND ERROR: Given object to assign operator is not l-value \n";
+            auto object = metaData.scope_variables[i].find(((string*)root->children[0]->data)->c_str());
+            if (object != metaData.scope_variables[i].end())
+            {
+                int index = total_pos + object->second;
+                dispatch(root->children[1], program, metaData);
+                EmitInstructionWithPayload(OpCodes::SET_LOCAL_VARIABLE, program, &index, sizeof(int));
+                return;
+            }
+            total_pos = total_pos - 1 - metaData.scope_variables[i - 1].size(); // 1 represents previous stack address stored on stack
+        }
+        // reaching  this point means we look for global
+        auto object = metaData.scope_variables[0].find(((string*)root->children[0]->data)->c_str());
+        if (object == metaData.scope_variables[0].end())
+        {
+            cout << "BACKEND ERROR: Unknown variable" << endl;
             exit(-1);
         }
-        int string_index = find_name(root->children[0], program);
+        int index = object->second;
         dispatch(root->children[1], program, metaData);
-        EmitInstructionWithPayload(OpCodes::SET_GLOBAL_VARIABLE, program, &string_index, sizeof(int));
+        EmitInstructionWithPayload(OpCodes::SET_GLOBAL_VARIABLE, program, &index, sizeof(int));
         break;
     }
     case AstNodeType::BLOCK:
@@ -318,7 +332,8 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         EmitInstructionWithPayload(OpCodes::JUMP_IF_FALSE, program, addr, sizeof(addr)); // jump to the next block
         int jump_pos = program.instruction_offset;
 
-        dispatch(root->children[1], program, metaData);
+        for (int i = 1; i < root->children.size(); i++) 
+            dispatch(root->children[i], program, metaData);
 
         int jump_condition_size = jump_condition - program.instruction_offset - 6; // 6 for jump instruction + payload
         EmitInstructionWithPayload(OpCodes::JUMP, program, &jump_condition_size, sizeof(addr));
@@ -326,6 +341,33 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         int jump_size = program.instruction_offset - jump_pos;
         *(int*)(program.instruction - jump_size - sizeof(int)) = jump_size;
 
+        break;
+    }
+    case AstNodeType::OP_FOR:
+    {
+
+        // translate for-loop into while loop
+        AstNode* FORhead = new AstNode(); // create block directly for for-loop
+        FORhead->type = AstNodeType::BLOCK;
+        FORhead->data = new string("NEW BLOCK");
+
+        AstNode* loop =  new AstNode();
+        loop->type = AstNodeType::OP_WHILE;
+        loop->data = new string("WHILE");
+
+        FORhead->children.push_back(root->children[0]); // run initializer expression first
+        FORhead->children.push_back(loop);
+
+        loop->children.push_back(root->children[1]); // set loop condition
+        for (AstNode* expr : root->children[3]->children)
+        {
+            loop->children.push_back(expr);
+        }
+        loop->children.push_back(root->children[2]); // push increment expression
+
+        dispatch(FORhead, program, metaData);
+        delete loop;
+        delete FORhead;
         break;
     }
     default:

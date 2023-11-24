@@ -64,7 +64,7 @@ void VirtualMachine::Execute(InstructionSequence program)
         }
         case OpCodes::SET_GLOBAL_VARIABLE:
         {
-                int index = *(int*)instructionData;
+            int index = *(int*)instructionData;
             instructionData += sizeof(int);
             LoxObject obj = Pop();
             UpdateGlobal(program.stringTable[index], obj);

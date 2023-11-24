@@ -1,9 +1,10 @@
 
 var x = 0;
-while(x < 4)
+
+for(var z = 3; z < 10; z = z+ 1)
 {
 	print "XXXXX";
 	x = x +1;
 }
-
+print x;
 print "FIN";
