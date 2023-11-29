@@ -226,6 +226,29 @@ LoxObject concat_strings(const LoxObject& leftOperand, const LoxObject& rightOpe
 	return c;
 }
 
+LoxObject newLoxFunction()
+{
+	LoxObject out;
+	out.type = LoxType::FUNCTION;
+	out.value.data = new LoxFunction();
+	AS_FUNCTION(out)->arity = 0;
+	AS_FUNCTION(out)->name = nullptr;
+	AS_FUNCTION(out)->size = 0;
+	AS_FUNCTION(out)->instruction_offset = 0;
+	AS_FUNCTION(out)->instruction = nullptr;
+	return out;
+}
+
+LoxObject newStateBuffer()
+{
+	LoxObject out;
+	out.type = LoxType::STATE_BUFFER;
+	out.value.data = new StateBuffer();
+	AS_SB(out)->instruction = nullptr;
+	AS_SB(out)->stack_size = 0;
+	return out;
+}
+
 void FreeLoxObject(const LoxObject& obj)
 {
 	switch (obj.type)

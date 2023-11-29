@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 
+#define FUNCTION_CODE -1
 enum class OpCodes;
 struct InstructionSequence
 {
@@ -61,7 +62,9 @@ enum class OpCodes
 	JUMP,
 	JUMP_IF_FALSE,
 	JUMP_IF_FALSE_KEEP_STACK,
-
+	CREATE_FUNCTION,
+	CALL,
+	RETURN
 };
 
 #endif // !COMPILER

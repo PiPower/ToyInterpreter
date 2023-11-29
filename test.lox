@@ -1,13 +1,24 @@
-
-var x = 0;
+var x = 12.42;
+var j = 10;
+fun printX()
+{
+	print x;
+	return 3;
+}
+fun yolo()
 {
 	var z = 3;
+	z = printX();
 	for(; z < 10; z = z +1)
 	{
 		print "XXXXX";
 		x = x +1;
 	}
 	print z;
+	return -20;
 }
+x = "hahaha";
+j = 3;
 print x;
 print "FIN";
+print j;

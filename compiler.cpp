@@ -4,7 +4,7 @@
 using namespace std;
 
 void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& metaData);
-
+void injectNilReturn(AstNode* root);
 OpCodes AstNodeTypeToOpCode(AstNodeType node_typ)
 {
     switch (node_typ)
@@ -54,9 +54,9 @@ int AllocationSchema(int prev_size)
 InstructionSequence compile(const std::string& source)
 {
     std::vector<Token> tokens = scan(source);
-    printTokens(tokens);
+    //printTokens(tokens);
     std::vector<AstNode*> AstSequence = parse(tokens);
-    printSequence(AstSequence);
+    //printSequence(AstSequence);
     return backend(AstSequence);
 }
 
@@ -114,23 +114,34 @@ void translate_2_operand_op(AstNode* root, OpCodes opcode ,InstructionSequence& 
     EmitInstruction(opcode, program);
 }
 
+int FindIdentifierLocal(CompilationMeta& metaData,const char* string, int& storage)
+{
+    int total_pos = 0;
+    for (int i = metaData.scope; i > 0; i--)
+    {
+        auto object = metaData.scope_variables[i].find(string);
+        if (object != metaData.scope_variables[i].end())
+        {
+            int index = total_pos + object->second;
+            storage = index;
+            return 1;
+        }
+        total_pos = total_pos - 1 - metaData.scope_variables[i - 1].size(); // 1 represents previous stack address stored on stack
+    }
+    return -1;
+}
+
 void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& metaData)
 {
     switch (root->type)
     {
     case AstNodeType::IDENTIFIER:
     {
-        int total_pos = 0;
-        for (int i = metaData.scope; i > 0; i--)
+        int index = 0;
+        if (FindIdentifierLocal(metaData, ((string*)root->data)->c_str(), index) == 1)
         {
-            auto object = metaData.scope_variables[i].find(((string*)root->data)->c_str());
-            if (object != metaData.scope_variables[i].end()) 
-            {
-                int index = total_pos + object->second;
-                EmitInstructionWithPayload(OpCodes::GET_LOCAL_VARIABLE, program, &index, sizeof(int));
-                return;
-            }
-            total_pos = total_pos - 1 - metaData.scope_variables[i - 1].size(); // 1 represents previous stack address stored on stack
+            EmitInstructionWithPayload(OpCodes::GET_LOCAL_VARIABLE, program, &index, sizeof(int));
+            return;
         }
         // reaching  this point means we look for global
         auto object = metaData.scope_variables[0].find(((string*)root->data)->c_str());
@@ -139,17 +150,15 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
             cout << "BACKEND ERROR: Unknown variable" << endl;
             exit(-1);
         }
-        int index = object->second;
+        index = object->second;
         EmitInstructionWithPayload(OpCodes::GET_GLOBAL_VARIABLE, program, &index, sizeof(int));
         break;
     }
     case AstNodeType::VARIABLE_DECLARATION:
     {
+        int object_index = 0;
         string* name = (string*)root->children[0]->data;
-        EmitString(program, name->c_str(), name->size() + 1);
-        int object_index = program.string_count - 1;
-        char* variable_name = program.stringTable[object_index];
-        auto object = metaData.scope_variables[metaData.scope].find(variable_name);
+        auto object = metaData.scope_variables[metaData.scope].find(name->c_str());
 
         if (object != metaData.scope_variables[metaData.scope].end())
         {
@@ -159,20 +168,24 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
 
         OpCodes opcode_def = OpCodes::DEFINE_GLOBAL_VARIABLE;
         OpCodes opcode_set = OpCodes::SET_GLOBAL_VARIABLE;
-        if (metaData.scope > 0) // for local object index is position offstet relative to base of stack
+        if (metaData.scope > 0) // for local object index is position offset relative to base of stack
         {
             opcode_def = OpCodes::DEFINE_LOCAL_VARIABLE;
             opcode_set = OpCodes::SET_LOCAL_VARIABLE;
             object_index = metaData.scope_variables[metaData.scope].size();
         }
-
+        else
+        {  // if global variable put its name in string table
+            EmitString(program, name->c_str(), name->size() + 1);
+            object_index = program.string_count - 1;
+        }
         EmitInstructionWithPayload(opcode_def, program, &object_index, sizeof(int));
         if (root->children[1] != nullptr)
         {
             dispatch(root->children[1], program, metaData);
             EmitInstructionWithPayload(opcode_set, program, &object_index, sizeof(int));
         }
-        metaData.scope_variables[metaData.scope].emplace(variable_name, object_index);
+        metaData.scope_variables[metaData.scope].emplace(name->c_str(), object_index);
 
         break;
     }
@@ -229,18 +242,13 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         break;
     case AstNodeType::OP_EQUAL:
     {
-        int total_pos = 0;
-        for (int i = metaData.scope; i > 0; i--)
+        dispatch(root->children[1], program, metaData);
+
+        int index = 0;
+        if (FindIdentifierLocal(metaData, ((string*)root->children[0]->data)->c_str(), index) == 1)
         {
-            auto object = metaData.scope_variables[i].find(((string*)root->children[0]->data)->c_str());
-            if (object != metaData.scope_variables[i].end())
-            {
-                int index = total_pos + object->second;
-                dispatch(root->children[1], program, metaData);
-                EmitInstructionWithPayload(OpCodes::SET_LOCAL_VARIABLE, program, &index, sizeof(int));
-                return;
-            }
-            total_pos = total_pos - 1 - metaData.scope_variables[i - 1].size(); // 1 represents previous stack address stored on stack
+            EmitInstructionWithPayload(OpCodes::SET_LOCAL_VARIABLE, program, &index, sizeof(int));
+            return;
         }
         // reaching  this point means we look for global
         auto object = metaData.scope_variables[0].find(((string*)root->children[0]->data)->c_str());
@@ -249,8 +257,7 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
             cout << "BACKEND ERROR: Unknown variable" << endl;
             exit(-1);
         }
-        int index = object->second;
-        dispatch(root->children[1], program, metaData);
+        index = object->second;
         EmitInstructionWithPayload(OpCodes::SET_GLOBAL_VARIABLE, program, &index, sizeof(int));
         break;
     }
@@ -262,6 +269,9 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         for (AstNode* child : root->children)
         {
             dispatch(child, program, metaData);
+            // if OP_CALL is not wrapped in another statement that means its not gonna be used anymore so pop it from stack
+            if (child->type == AstNodeType::OP_CALL) EmitInstruction(OpCodes::POP, program);
+            
         }
         EmitInstruction(OpCodes::END_FRAME, program);
 
@@ -378,10 +388,67 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         delete FORhead;
         break;
     }
+    case AstNodeType::FUNCTION_DECLARATION:
+    {
+        string funcName = *(string*)root->children[0]->data;
+        int nameSize = funcName.size() + 1; 
+        auto object = metaData.scope_variables[metaData.scope].find(funcName);
+        if (object != metaData.scope_variables[metaData.scope].end())
+        {
+            cout << "BACKEND ERROR: Variable redefinition" << endl;
+            exit(-1);
+        }
+        
+        char* payload = new char[sizeof(int) + nameSize + sizeof(int)];
+        memcpy(payload, &nameSize, sizeof(int)); // set name size
+        memcpy(payload + sizeof(int), funcName.c_str(), nameSize);// set function name
+        EmitInstructionWithPayload(OpCodes::CREATE_FUNCTION, program, payload, sizeof(int) + nameSize + sizeof(int));
+        int* function_size_patch =(int*)(program.instruction   - sizeof(int));
+        int curr_offset = program.instruction_offset;
+        injectNilReturn(root->children[2]);
+        dispatch(root->children[2], program, metaData);
+        int size = program.instruction_offset - curr_offset;
+        *function_size_patch = program.instruction_offset - curr_offset; // patch function bytecode size
+
+        metaData.scope_variables[0].emplace(funcName.c_str(), FUNCTION_CODE);
+        break;
+    }
+    case AstNodeType::OP_CALL:
+    {
+        string function_name = *(string*)root->children[0]->data;
+        char* payload = new char[function_name.size() + 1];
+        memcpy(payload, function_name.c_str(), function_name.size());
+        payload[function_name.size()] = '\0';
+        EmitInstructionWithPayload(OpCodes::CALL, program, payload, function_name.size() + 1);
+        break;
+    }
+    case AstNodeType::OP_RETURN:
+    {
+        dispatch(root->children[0], program, metaData);
+        EmitInstruction(OpCodes::RETURN, program);
+        break;
+    }
     default:
         cout << "BACKEND ERROR: Unsupported instruction !!!!" << endl;
         exit(-1);
         break;
+    }
+}
+
+void injectNilReturn(AstNode* root)
+{
+    if (root->children[root->children.size() - 1]->type != AstNodeType::OP_RETURN)
+    {
+        AstNode* ret_node, * nil_node;
+        nil_node = new AstNode;
+        nil_node->type = AstNodeType::NIL;
+        nil_node->data = nullptr;
+
+        ret_node = new AstNode;
+        ret_node->type = AstNodeType::OP_RETURN;
+        ret_node->children.push_back(nil_node);
+        ret_node->data = new string("return: ");
+        root->children.push_back(ret_node);
     }
 }
 
@@ -401,6 +468,8 @@ InstructionSequence backend(const std::vector<AstNode*>& AstSequence)
     for (AstNode* root : AstSequence)
     {
         dispatch(root, program, metaData);
+        // if OP_CALL is not wrapped in another statement that means its not gonna be used anymore so pop it from stack
+        if (root->type == AstNodeType::OP_CALL) EmitInstruction(OpCodes::POP, program);
     }
     EmitInstruction(OpCodes::EXIT, program);
     return program;

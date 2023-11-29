@@ -113,7 +113,7 @@ AstNode* call(const std::vector<Token>& tokens, int& index)
 	{
 		Token previous = tokens[index - 1];
 		AstNode* right;
-		if (match({ TokenType::RIGHT_PAREN }, tokens, index)) right == nullptr;
+		if (match({ TokenType::RIGHT_PAREN }, tokens, index)) right = nullptr;
 		else
 		{
 			right = parse_args(tokens, index);

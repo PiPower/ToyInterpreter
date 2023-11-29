@@ -59,6 +59,7 @@ void VirtualMachine::Execute(InstructionSequence program)
             LoxObject place_holder;
             place_holder.type = LoxType::NIL;
             place_holder.value.data = nullptr;
+            string lol = program.stringTable[index];
             InsertGlobal(program.stringTable[index], place_holder);
             break;
         }
@@ -182,6 +183,57 @@ void VirtualMachine::Execute(InstructionSequence program)
             Push(obj);
             break;
         }
+        case OpCodes::CREATE_FUNCTION:
+        {
+            int name_size = *(int*)instructionData;
+            instructionData += sizeof(int);
+            char* name = instructionData;
+            instructionData += name_size;
+            int code_size = *(int*)instructionData;
+            instructionData += sizeof(int);
+
+            LoxObject func = newLoxFunction();
+            AS_FUNCTION(func)->name = name;
+            AS_FUNCTION(func)->instruction = instructionData;
+            AS_FUNCTION(func)->size = code_size;
+
+            InsertGlobal(AS_FUNCTION(func)->name, func);
+            instructionData += code_size;
+            break;
+        }
+        case OpCodes::CALL:
+        {
+            string name = "";
+            name.append(instructionData);
+            instructionData += name.size() + 1;
+            LoxObject function = GetGlobal(name.c_str());
+            LoxObject ip_buffer = newStateBuffer();
+            AS_SB(ip_buffer)->instruction = instructionData;
+            AS_SB(ip_buffer)->stack_base = stack_base;
+            AS_SB(ip_buffer)->stack_size = stack.size();
+            Push(ip_buffer); // store current ip
+
+            instructionData = AS_FUNCTION(function)->instruction;
+            break;
+        }
+        case OpCodes::RETURN:
+        {
+            LoxObject returned = Pop();
+            LoxObject ip_buffer;
+            for (int i = stack.size() - 1; i >= 0; i--)
+            {
+                if (stack[i].type == LoxType::STATE_BUFFER)
+                {
+                    ip_buffer = stack[i];
+                    break;
+                }
+            }
+            stack.erase(stack.begin() + AS_SB(ip_buffer)->stack_size, stack.end());
+            this->stack_base = AS_SB(ip_buffer)->stack_base;
+            instructionData = AS_SB(ip_buffer)->instruction;
+            Push(returned);
+            break;
+        }
         default:
             cout << "VM ERROR: Unsupported instruction by VM!!!! \n";
             exit(-1);
@@ -283,7 +335,7 @@ void VirtualMachine::InsertGlobal(char* string, LoxObject obj)
     globals.insert({ string, obj });
 }
 
-LoxObject VirtualMachine::GetGlobal(char* string)
+LoxObject VirtualMachine::GetGlobal(const char* string)
 {
     unordered_map <std::string, LoxObject>::iterator pos = globals.find(string);
     if (pos == globals.cend())
@@ -309,8 +361,7 @@ LoxObject VirtualMachine::LoadObject(char** instructionData, char** stringTable,
     {
         LoxObject c;
         c.type = LoxType::NUMBER;
-        c.value.data = new double;
-        c.value.number = AS_DOUBLE(*instructionData);
+        c.value.number = *(double*)(*instructionData);
         *instructionData += sizeof(double);
         return c;
     }

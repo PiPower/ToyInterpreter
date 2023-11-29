@@ -39,3 +39,5 @@ NOT; pop value from stack and negate it and push back; op_code(2 byte)
 JUMP;
 JUMP_IF_FALSE;
 JUMP_IF_FALSE_KEEP_STACK;
+CREATE_FUNCTION; creates function; op_code(2 byte)|name_size(4 byte int)| name_string (name_size byte int)| byte_code_size(4 byte int)
+CALL;

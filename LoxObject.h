@@ -1,14 +1,16 @@
 #ifndef LOX_OBJECT
 #define LOX_OBJECT
-
-#define AS_DOUBLE(ptr) *(double*)(ptr)
-
+#include <string>
+#define AS_FUNCTION(obj) ((LoxFunction*)(obj.value.data))
+#define AS_SB(obj) ((StateBuffer*)(obj.value.data))
 enum class LoxType
 {
 	NUMBER, // lightweight wrapper around double to keep stack management easy
 	BOOL,
 	NIL,
-	STRING
+	STATE_BUFFER,
+	STRING,
+	FUNCTION
 };
 
 struct Value
@@ -25,6 +27,22 @@ struct LoxObject
 	Value value;
 };
 
+struct LoxFunction
+{
+	int arity;
+	char* name;
+	
+	char* instruction; 
+	int instruction_offset;
+	unsigned int size;
+};
+
+struct StateBuffer
+{
+	char* instruction;
+	int stack_base;
+	int stack_size; 
+};
 typedef LoxObject(*op_type)(const LoxObject&, const LoxObject&);
 
 void printLoxObject(const LoxObject& obj);
@@ -42,7 +60,9 @@ LoxObject greaterEqualValue(const LoxObject& leftOperand, const LoxObject& right
 LoxObject greaterValue(const LoxObject& leftOperand, const LoxObject& rightOperand);
 //string ops
 LoxObject concat_strings(const LoxObject& leftOperand, const LoxObject& rightOperand);
-
+//function
+LoxObject newLoxFunction();
+LoxObject newStateBuffer();
 void FreeLoxObject(const LoxObject& obj);
 #endif // !
 

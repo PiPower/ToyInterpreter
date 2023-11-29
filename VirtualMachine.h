@@ -27,7 +27,7 @@ private:
 	op_type string_resolver(OpCodes opcode);
 	op_type logical_resolver(OpCodes opcode);
 	void InsertGlobal(char* string, LoxObject obj);
-	LoxObject GetGlobal(char* string);
+	LoxObject GetGlobal(const char* string);
 	LoxObject LoadObject(char** instructionData, char** stringTable, char type);
 	void RemoveGlobal(char* string, LoxObject obj);
 	void UpdateGlobal(char* string, LoxObject obj);
