@@ -5,6 +5,8 @@ using namespace std;
 
 void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& metaData);
 void injectNilReturn(AstNode* root);
+ScopedVariables prepareFunctionScope(AstNode* params, CompilationMeta& metaData);
+
 OpCodes AstNodeTypeToOpCode(AstNodeType node_typ)
 {
     switch (node_typ)
@@ -269,7 +271,7 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         for (AstNode* child : root->children)
         {
             dispatch(child, program, metaData);
-            // if OP_CALL is not wrapped in another statement that means its not gonna be used anymore so pop it from stack
+            // if OP_CALL is not wrapped in another statement that means returned value is not gonna be used anymore so pop it from stack
             if (child->type == AstNodeType::OP_CALL) EmitInstruction(OpCodes::POP, program);
             
         }
@@ -405,8 +407,13 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         EmitInstructionWithPayload(OpCodes::CREATE_FUNCTION, program, payload, sizeof(int) + nameSize + sizeof(int));
         int* function_size_patch =(int*)(program.instruction   - sizeof(int));
         int curr_offset = program.instruction_offset;
+
+        CompilationMeta functionMetaData = {};
+        functionMetaData.scope = 1;
+        functionMetaData.scope_variables = prepareFunctionScope(root->children[1], metaData);
         injectNilReturn(root->children[2]);
-        dispatch(root->children[2], program, metaData);
+        dispatch(root->children[2], program, functionMetaData);
+
         int size = program.instruction_offset - curr_offset;
         *function_size_patch = program.instruction_offset - curr_offset; // patch function bytecode size
 
@@ -415,6 +422,12 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
     }
     case AstNodeType::OP_CALL:
     {
+        // emit args first
+        for (auto child : root->children[1]->children)
+        {
+            dispatch(child, program, metaData);
+        }
+
         string function_name = *(string*)root->children[0]->data;
         char* payload = new char[function_name.size() + 1];
         memcpy(payload, function_name.c_str(), function_name.size());
@@ -452,6 +465,24 @@ void injectNilReturn(AstNode* root)
     }
 }
 
+ScopedVariables prepareFunctionScope(AstNode* params, CompilationMeta& metaData)
+{
+    /* 
+    stack for function looks like  
+    unaccesable_stack_variable, param_1, param_2, ..., param_k, function_frame, block_frame, ....
+    */
+    ScopedVariables out;
+    out.push_back(metaData.scope_variables[0]); // push global variables
+    out.push_back(unordered_map<string, int>()); // params layer
+    int i;
+    for (i = 0; i < params->children.size() ; i++)
+    {
+        out[1].emplace(*(string*)params->children[i]->data, i);
+    }
+    out[1].emplace("function store object", i); // offset by -1 because of function_frame
+    return out;
+}
+
 InstructionSequence backend(const std::vector<AstNode*>& AstSequence)
 {
     InstructionSequence program;
@@ -468,7 +499,7 @@ InstructionSequence backend(const std::vector<AstNode*>& AstSequence)
     for (AstNode* root : AstSequence)
     {
         dispatch(root, program, metaData);
-        // if OP_CALL is not wrapped in another statement that means its not gonna be used anymore so pop it from stack
+        // if OP_CALL is not wrapped in another statement that means returned value is not gonna be used anymore so pop it from stack
         if (root->type == AstNodeType::OP_CALL) EmitInstruction(OpCodes::POP, program);
     }
     EmitInstruction(OpCodes::EXIT, program);

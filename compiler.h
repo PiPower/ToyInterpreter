@@ -21,11 +21,12 @@ struct InstructionSequence
 	int table_size;
 };
 
+typedef std::vector<std::unordered_map< std::string, int>> ScopedVariables;
 struct CompilationMeta
 {
 	int scope;
 	// for globals int is index in string table, for local offset from begging of the stack
-	std::vector<std::unordered_map< std::string, int>> scope_variables;
+	ScopedVariables scope_variables;
 };
 InstructionSequence compile(const std::string& source);
 InstructionSequence backend(const std::vector<AstNode*>& AstSequence);

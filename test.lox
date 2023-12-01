@@ -1,14 +1,15 @@
 var x = 12.42;
 var j = 10;
-fun printX()
+
+
+
+fun yolo(a, b, c)
 {
-	print x;
-	return 3;
-}
-fun yolo()
-{
+	print a;
+	print b;
+	print c;
 	var z = 3;
-	z = printX();
+	
 	for(; z < 10; z = z +1)
 	{
 		print "XXXXX";
@@ -17,6 +18,8 @@ fun yolo()
 	print z;
 	return -20;
 }
+
+yolo(x *21.5, 3, 10*34);
 x = "hahaha";
 j = 3;
 print x;
