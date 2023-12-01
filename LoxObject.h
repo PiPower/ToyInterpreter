@@ -29,7 +29,7 @@ struct LoxObject
 
 struct LoxFunction
 {
-	int arity;
+	unsigned int arity;
 	char* name;
 	
 	char* instruction; 

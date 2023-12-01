@@ -401,10 +401,12 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
             exit(-1);
         }
         
-        char* payload = new char[sizeof(int) + nameSize + sizeof(int)];
+        char* payload = new char[sizeof(int) + nameSize + sizeof(unsigned int) + sizeof(int) ];
+        unsigned int arity = root->children[1]->children.size();
         memcpy(payload, &nameSize, sizeof(int)); // set name size
         memcpy(payload + sizeof(int), funcName.c_str(), nameSize);// set function name
-        EmitInstructionWithPayload(OpCodes::CREATE_FUNCTION, program, payload, sizeof(int) + nameSize + sizeof(int));
+        memcpy(payload + sizeof(int) + nameSize, &arity, sizeof(unsigned int));// set arity
+        EmitInstructionWithPayload(OpCodes::CREATE_FUNCTION, program, payload, sizeof(int) + nameSize + sizeof(unsigned int) + sizeof(int));
         int* function_size_patch =(int*)(program.instruction   - sizeof(int));
         int curr_offset = program.instruction_offset;
 

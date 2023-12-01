@@ -1,15 +1,19 @@
 var x = 12.42;
 var j = 10;
 
-
+fun yolo2(x, y)
+{
+	print x + y;
+}
 
 fun yolo(a, b, c)
 {
+	var p =23;
 	print a;
 	print b;
 	print c;
 	var z = 3;
-	
+	yolo2(9, 10);
 	for(; z < 10; z = z +1)
 	{
 		print "XXXXX";

@@ -189,11 +189,14 @@ void VirtualMachine::Execute(InstructionSequence program)
             instructionData += sizeof(int);
             char* name = instructionData;
             instructionData += name_size;
+            unsigned int arity = *(unsigned int*)instructionData;
+            instructionData += sizeof(unsigned int);
             int code_size = *(int*)instructionData;
             instructionData += sizeof(int);
 
             LoxObject func = newLoxFunction();
             AS_FUNCTION(func)->name = name;
+            AS_FUNCTION(func)->arity = arity;
             AS_FUNCTION(func)->instruction = instructionData;
             AS_FUNCTION(func)->size = code_size;
 
@@ -210,7 +213,7 @@ void VirtualMachine::Execute(InstructionSequence program)
             LoxObject ip_buffer = newStateBuffer();
             AS_SB(ip_buffer)->instruction = instructionData;
             AS_SB(ip_buffer)->stack_base = stack_base;
-            AS_SB(ip_buffer)->stack_size = stack.size();
+            AS_SB(ip_buffer)->stack_size = stack.size() - AS_FUNCTION(function)->arity;
             Push(ip_buffer); // store current ip
 
             instructionData = AS_FUNCTION(function)->instruction;
@@ -228,7 +231,7 @@ void VirtualMachine::Execute(InstructionSequence program)
                     break;
                 }
             }
-            stack.erase(stack.begin() + AS_SB(ip_buffer)->stack_size, stack.end());
+            stack.erase(stack.begin() + AS_SB(ip_buffer)->stack_size , stack.end());
             this->stack_base = AS_SB(ip_buffer)->stack_base;
             instructionData = AS_SB(ip_buffer)->instruction;
             Push(returned);
