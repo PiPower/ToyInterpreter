@@ -30,7 +30,6 @@ struct LoxObject
 struct LoxFunction
 {
 	unsigned int arity;
-	char* name;
 	
 	char* instruction; 
 	int instruction_offset;

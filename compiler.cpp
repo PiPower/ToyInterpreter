@@ -418,10 +418,6 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
             dispatch(child, program, metaData);
         }
 
-        //string function_name = *(string*)root->children[0]->data;
-        //char* payload = new char[function_name.size() + 1];
-        //memcpy(payload, function_name.c_str(), function_name.size());
-        //payload[function_name.size()] = '\0';
         dispatch(root->children[0], program, metaData);
         EmitInstruction(OpCodes::CALL, program);
         break;

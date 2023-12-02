@@ -1,15 +1,14 @@
 
-fun yolo2(x, y)
-{
-	print x + y;
-}
-
-
 var x = 12.42;
 var j = 10;
 
 fun yolo(a, b, c)
 {
+	fun yolo2(x, y)
+	{
+		print x + y;
+	}
+
 	var p = 23;
 	print a;
 	print b;
@@ -22,9 +21,10 @@ fun yolo(a, b, c)
 		x = x +1;
 	}
 	print z;
-	return -20;
+	return yolo2;
 }
-yolo(x *21.5, 3, 10*34);
+var old_func = yolo(x *21.5, 3, 10*34);
+old_func(11, 23);
 x = "hahaha";
 j = 3;
 print x;

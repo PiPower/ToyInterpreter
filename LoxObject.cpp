@@ -232,7 +232,6 @@ LoxObject newLoxFunction()
 	out.type = LoxType::FUNCTION;
 	out.value.data = new LoxFunction();
 	AS_FUNCTION(out)->arity = 0;
-	AS_FUNCTION(out)->name = nullptr;
 	AS_FUNCTION(out)->size = 0;
 	AS_FUNCTION(out)->instruction_offset = 0;
 	AS_FUNCTION(out)->instruction = nullptr;

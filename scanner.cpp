@@ -11,7 +11,7 @@ bool isDigit(const char& c)
 
 bool isAlpha(const char& c)
 {
-	return  ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
+	return  ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || c == '_';
 }
 
 bool match(const string& source, const char& c, int& index)
