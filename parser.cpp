@@ -469,10 +469,16 @@ AstNode* function_declaration(const std::vector<Token>& tokens, int& index)
 	if (!check(TokenType::LEFT_BRACE, tokens, index)) exit(-1);
 	AstNode* body = statement(tokens, index);
 
-	root->children.push_back(name);
+
+	AstNode* name_variable = new AstNode();
+	name_variable->type = AstNodeType::VARIABLE_DECLARATION;
+	name_variable->data = new string("(VAR FUNC) =");
+	name_variable->children.push_back(name);
+	name_variable->children.push_back(root);
+
 	root->children.push_back(params);
 	root->children.push_back(body);
-	return root;
+	return name_variable;
 }
 
 AstNode* parse_params(const std::vector<Token>& tokens, int& index)

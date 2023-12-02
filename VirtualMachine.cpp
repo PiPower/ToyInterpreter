@@ -185,31 +185,24 @@ void VirtualMachine::Execute(InstructionSequence program)
         }
         case OpCodes::CREATE_FUNCTION:
         {
-            int name_size = *(int*)instructionData;
-            instructionData += sizeof(int);
-            char* name = instructionData;
-            instructionData += name_size;
             unsigned int arity = *(unsigned int*)instructionData;
             instructionData += sizeof(unsigned int);
             int code_size = *(int*)instructionData;
             instructionData += sizeof(int);
 
             LoxObject func = newLoxFunction();
-            AS_FUNCTION(func)->name = name;
             AS_FUNCTION(func)->arity = arity;
             AS_FUNCTION(func)->instruction = instructionData;
             AS_FUNCTION(func)->size = code_size;
 
-            InsertGlobal(AS_FUNCTION(func)->name, func);
+            Push(func);
             instructionData += code_size;
             break;
         }
         case OpCodes::CALL:
         {
-            string name = "";
-            name.append(instructionData);
-            instructionData += name.size() + 1;
-            LoxObject function = GetGlobal(name.c_str());
+           
+            LoxObject function = Pop();
             LoxObject ip_buffer = newStateBuffer();
             AS_SB(ip_buffer)->instruction = instructionData;
             AS_SB(ip_buffer)->stack_base = stack_base;

@@ -1,20 +1,22 @@
-var x = 12.42;
-var j = 10;
 
 fun yolo2(x, y)
 {
 	print x + y;
 }
 
+
+var x = 12.42;
+var j = 10;
+
 fun yolo(a, b, c)
 {
-	var p =23;
+	var p = 23;
 	print a;
 	print b;
 	print c;
 	var z = 3;
 	yolo2(9, 10);
-	for(; z < 10; z = z +1)
+	for(z = 5; z < 10; z = z +1)
 	{
 		print "XXXXX";
 		x = x +1;
@@ -22,7 +24,6 @@ fun yolo(a, b, c)
 	print z;
 	return -20;
 }
-
 yolo(x *21.5, 3, 10*34);
 x = "hahaha";
 j = 3;

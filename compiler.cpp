@@ -392,34 +392,22 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
     }
     case AstNodeType::FUNCTION_DECLARATION:
     {
-        string funcName = *(string*)root->children[0]->data;
-        int nameSize = funcName.size() + 1; 
-        auto object = metaData.scope_variables[metaData.scope].find(funcName);
-        if (object != metaData.scope_variables[metaData.scope].end())
-        {
-            cout << "BACKEND ERROR: Variable redefinition" << endl;
-            exit(-1);
-        }
-        
-        char* payload = new char[sizeof(int) + nameSize + sizeof(unsigned int) + sizeof(int) ];
-        unsigned int arity = root->children[1]->children.size();
-        memcpy(payload, &nameSize, sizeof(int)); // set name size
-        memcpy(payload + sizeof(int), funcName.c_str(), nameSize);// set function name
-        memcpy(payload + sizeof(int) + nameSize, &arity, sizeof(unsigned int));// set arity
-        EmitInstructionWithPayload(OpCodes::CREATE_FUNCTION, program, payload, sizeof(int) + nameSize + sizeof(unsigned int) + sizeof(int));
-        int* function_size_patch =(int*)(program.instruction   - sizeof(int));
+        char* payload = new char[sizeof(unsigned int) + sizeof(int) ];
+        unsigned int arity = root->children[0]->children.size();
+        memcpy(payload, &arity, sizeof(unsigned int));// set arity
+        EmitInstructionWithPayload(OpCodes::CREATE_FUNCTION, program, payload, sizeof(unsigned int) + sizeof(int));
+        int* function_size_patch =(int*)(program.instruction - sizeof(int));
         int curr_offset = program.instruction_offset;
 
         CompilationMeta functionMetaData = {};
         functionMetaData.scope = 1;
-        functionMetaData.scope_variables = prepareFunctionScope(root->children[1], metaData);
-        injectNilReturn(root->children[2]);
-        dispatch(root->children[2], program, functionMetaData);
+        functionMetaData.scope_variables = prepareFunctionScope(root->children[0], metaData);
+        injectNilReturn(root->children[1]);
+        dispatch(root->children[1], program, functionMetaData);
 
         int size = program.instruction_offset - curr_offset;
         *function_size_patch = program.instruction_offset - curr_offset; // patch function bytecode size
 
-        metaData.scope_variables[0].emplace(funcName.c_str(), FUNCTION_CODE);
         break;
     }
     case AstNodeType::OP_CALL:
@@ -430,11 +418,12 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
             dispatch(child, program, metaData);
         }
 
-        string function_name = *(string*)root->children[0]->data;
-        char* payload = new char[function_name.size() + 1];
-        memcpy(payload, function_name.c_str(), function_name.size());
-        payload[function_name.size()] = '\0';
-        EmitInstructionWithPayload(OpCodes::CALL, program, payload, function_name.size() + 1);
+        //string function_name = *(string*)root->children[0]->data;
+        //char* payload = new char[function_name.size() + 1];
+        //memcpy(payload, function_name.c_str(), function_name.size());
+        //payload[function_name.size()] = '\0';
+        dispatch(root->children[0], program, metaData);
+        EmitInstruction(OpCodes::CALL, program);
         break;
     }
     case AstNodeType::OP_RETURN:
