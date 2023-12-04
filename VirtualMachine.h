@@ -36,6 +36,7 @@ private:
 	int stack_base;
 	std::vector<LoxObject> stack;
 	std::unordered_map <std::string, LoxObject> globals;
+	LoxFunction* currentFunction;
 };
 
 #endif // !VIRTUAL_MACHINE

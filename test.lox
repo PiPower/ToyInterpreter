@@ -1,28 +1,47 @@
+fun test(string)
+{
+	var st = string;
+	fun print_st()
+	{
+		print st;
+	}
+	return print_st;
+}
+
+var ko = test("czesc tu 1");
+ko();
+var ko2 = test("czesc tu 2");
+ko2();
+
 
 var x = 12.42;
 var j = 10;
 
 fun yolo(a, b, c)
 {
+	var p = 23;
 	fun yolo2(x, y)
 	{
-		print x + y;
+		print "upvalue: ";
+		print x + p;
 	}
 
-	var p = 23;
 	print a;
 	print b;
 	print c;
 	var z = 3;
-	yolo2(9, 10);
 	for(z = 5; z < 10; z = z +1)
 	{
 		print "XXXXX";
 		x = x +1;
 	}
+	yolo2(9, 10);
 	print z;
 	return yolo2;
 }
+
+
+
 var old_func = yolo(x *21.5, 3, 10*34);
 old_func(11, 23);
 x = "hahaha";

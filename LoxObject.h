@@ -1,6 +1,7 @@
 #ifndef LOX_OBJECT
 #define LOX_OBJECT
 #include <string>
+#include <vector>
 #define AS_FUNCTION(obj) ((LoxFunction*)(obj.value.data))
 #define AS_SB(obj) ((StateBuffer*)(obj.value.data))
 enum class LoxType
@@ -34,6 +35,8 @@ struct LoxFunction
 	char* instruction; 
 	int instruction_offset;
 	unsigned int size;
+
+	std::vector<LoxObject> upvalueTable;
 };
 
 struct StateBuffer
@@ -41,6 +44,7 @@ struct StateBuffer
 	char* instruction;
 	int stack_base;
 	int stack_size; 
+	LoxFunction* caller;
 };
 typedef LoxObject(*op_type)(const LoxObject&, const LoxObject&);
 

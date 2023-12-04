@@ -13,6 +13,7 @@ void compile_and_execute(const std::string& source)
 VirtualMachine::VirtualMachine()
 {
     stack_base = 0;
+    currentFunction = nullptr;
 }
 
 void VirtualMachine::Execute(InstructionSequence program)
@@ -105,6 +106,14 @@ void VirtualMachine::Execute(InstructionSequence program)
             Push(obj);
             break;
         }
+        case OpCodes::GET_UPVALUE:
+        {
+            unsigned int table_index = *(unsigned int*)instructionData;
+            instructionData += sizeof(unsigned int);
+
+            Push(currentFunction->upvalueTable[table_index]);
+            break;
+        }
         case OpCodes::LESS_EQUAL:
         case OpCodes::LESS:
         case OpCodes::GREATER_EQUAL:
@@ -185,16 +194,26 @@ void VirtualMachine::Execute(InstructionSequence program)
         }
         case OpCodes::CREATE_FUNCTION:
         {
+
             unsigned int arity = *(unsigned int*)instructionData;
             instructionData += sizeof(unsigned int);
             int code_size = *(int*)instructionData;
             instructionData += sizeof(int);
+            int upvalues_count = *(int*)instructionData;
+            instructionData += sizeof(int);
 
             LoxObject func = newLoxFunction();
             AS_FUNCTION(func)->arity = arity;
-            AS_FUNCTION(func)->instruction = instructionData;
             AS_FUNCTION(func)->size = code_size;
+            AS_FUNCTION(func)->upvalueTable.resize(upvalues_count);
+            for (int i = 0; i < upvalues_count; i++)
+            {
+                UpvalueDescriptor* desc = (UpvalueDescriptor*)instructionData;
+                instructionData += sizeof(UpvalueDescriptor);
+                AS_FUNCTION(func)->upvalueTable[desc->table_index] = stack[stack_base + desc->stack_pos];
+            }
 
+            AS_FUNCTION(func)->instruction = instructionData;
             Push(func);
             instructionData += code_size;
             break;
@@ -207,6 +226,8 @@ void VirtualMachine::Execute(InstructionSequence program)
             AS_SB(ip_buffer)->instruction = instructionData;
             AS_SB(ip_buffer)->stack_base = stack_base;
             AS_SB(ip_buffer)->stack_size = stack.size() - AS_FUNCTION(function)->arity;
+            AS_SB(ip_buffer)->caller = this->currentFunction;
+            this->currentFunction = (LoxFunction*) function.value.data;
             Push(ip_buffer); // store current ip
 
             instructionData = AS_FUNCTION(function)->instruction;

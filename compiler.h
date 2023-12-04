@@ -22,11 +22,19 @@ struct InstructionSequence
 };
 
 typedef std::vector<std::unordered_map< std::string, int>> ScopedVariables;
+struct UpvalueDescriptor
+{
+	int stack_pos;
+	unsigned int table_index;
+};
 struct CompilationMeta
 {
+	CompilationMeta* enclosing;
 	int scope;
 	// for globals int is index in string table, for local offset from begging of the stack
 	ScopedVariables scope_variables;
+	//stores compiled code for upvalues
+	std::unordered_map< std::string, UpvalueDescriptor> existingUpvalues;
 };
 InstructionSequence compile(const std::string& source);
 InstructionSequence backend(const std::vector<AstNode*>& AstSequence);
@@ -57,6 +65,8 @@ enum class OpCodes
 	DEFINE_LOCAL_VARIABLE,
 	SET_LOCAL_VARIABLE,
 	GET_LOCAL_VARIABLE,
+	DEFINE_UPVALUE,
+	GET_UPVALUE,
 	START_FRAME,
 	END_FRAME,
 	NOT,
@@ -65,7 +75,7 @@ enum class OpCodes
 	JUMP_IF_FALSE_KEEP_STACK,
 	CREATE_FUNCTION,
 	CALL,
-	RETURN
+	RETURN,
 };
 
 #endif // !COMPILER

@@ -39,5 +39,6 @@ NOT; pop value from stack and negate it and push back; op_code(2 byte)
 JUMP;
 JUMP_IF_FALSE;
 JUMP_IF_FALSE_KEEP_STACK;
-CREATE_FUNCTION; creates function; op_code(2 byte)|name_size(4 byte int)| name_string (name_size byte int)| byte_code_size(4 byte int)
+CREATE_FUNCTION; creates function; op_code(2 byte)|arity (4 byte uint)|byte_code_size(4 byte int) | upvalues_count(4 byte int) | define_upvalue_1 ... define_upvalue_k (ref: DEFINE_UPVALUE) 
 CALL;
+DEFINE_UPVALUE; defines upvalue op_code(2 byte)|stack_pos(4 byte int) | index_in_table

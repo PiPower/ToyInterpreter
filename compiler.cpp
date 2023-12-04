@@ -5,6 +5,8 @@ using namespace std;
 
 void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& metaData);
 void injectNilReturn(AstNode* root);
+void resolveUpvalue(const char* string, InstructionSequence& program, CompilationMeta& metaData);
+void compileUpvalues(char* base_program_pos, InstructionSequence& program, CompilationMeta& metaData);
 ScopedVariables prepareFunctionScope(AstNode* params, CompilationMeta& metaData);
 
 OpCodes AstNodeTypeToOpCode(AstNodeType node_typ)
@@ -147,13 +149,17 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
         }
         // reaching  this point means we look for global
         auto object = metaData.scope_variables[0].find(((string*)root->data)->c_str());
-        if (object == metaData.scope_variables[0].end())
+        if (object == metaData.scope_variables[0].end() && metaData.enclosing == nullptr)
         {
             cout << "BACKEND ERROR: Unknown variable" << endl;
             exit(-1);
         }
-        index = object->second;
-        EmitInstructionWithPayload(OpCodes::GET_GLOBAL_VARIABLE, program, &index, sizeof(int));
+        if (object != metaData.scope_variables[0].end())
+        {
+            index = object->second;
+            EmitInstructionWithPayload(OpCodes::GET_GLOBAL_VARIABLE, program, &index, sizeof(int));
+        }
+        else resolveUpvalue(((string*)root->data)->c_str(), program, metaData);
         break;
     }
     case AstNodeType::VARIABLE_DECLARATION:
@@ -393,29 +399,36 @@ void dispatch(AstNode* root, InstructionSequence& program, CompilationMeta& meta
     case AstNodeType::FUNCTION_DECLARATION:
     {
         char* payload = new char[sizeof(unsigned int) + sizeof(int) ];
-        unsigned int arity = root->children[0]->children.size();
+        unsigned int arity = root->children[0]!= nullptr? root->children[0]->children.size() : 0;
         memcpy(payload, &arity, sizeof(unsigned int));// set arity
+        char* seq_beg = program.instruction;
         EmitInstructionWithPayload(OpCodes::CREATE_FUNCTION, program, payload, sizeof(unsigned int) + sizeof(int));
         int* function_size_patch =(int*)(program.instruction - sizeof(int));
         int curr_offset = program.instruction_offset;
 
         CompilationMeta functionMetaData = {};
+        functionMetaData.enclosing = &metaData;
         functionMetaData.scope = 1;
         functionMetaData.scope_variables = prepareFunctionScope(root->children[0], metaData);
         injectNilReturn(root->children[1]);
         dispatch(root->children[1], program, functionMetaData);
 
         int size = program.instruction_offset - curr_offset;
-        *function_size_patch = program.instruction_offset - curr_offset; // patch function bytecode size
+        *function_size_patch = program.instruction_offset - curr_offset; // patch bytecode size
+        compileUpvalues(program.instruction - size , program, functionMetaData);
+        size = program.instruction_offset - curr_offset;
 
         break;
     }
     case AstNodeType::OP_CALL:
     {
         // emit args first
-        for (auto child : root->children[1]->children)
+        if (root->children[1] != nullptr)
         {
-            dispatch(child, program, metaData);
+            for (auto child : root->children[1]->children)
+            {
+                dispatch(child, program, metaData);
+            }
         }
 
         dispatch(root->children[0], program, metaData);
@@ -452,6 +465,64 @@ void injectNilReturn(AstNode* root)
     }
 }
 
+void resolveUpvalue(const char* string, InstructionSequence& program, CompilationMeta& metaData)
+{
+    CompilationMeta* currentlyProcessed = metaData.enclosing;
+    int indexGlobal = 0;
+    auto existing = metaData.existingUpvalues.find(string);
+    if (existing != metaData.existingUpvalues.cend())
+    {
+        EmitInstructionWithPayload(OpCodes::GET_UPVALUE, program, &existing->second.table_index, sizeof(unsigned int));
+        return ;
+    }
+
+    while (currentlyProcessed->enclosing != nullptr) // if enclosing is nullptr that means we are in global scope which has been checked
+    {   
+        int index = 0;
+        if (FindIdentifierLocal(*currentlyProcessed, string, index) == 1)
+        {
+            indexGlobal += index;
+            UpvalueDescriptor uvDes = {};
+            uvDes.stack_pos = index;
+            uvDes.table_index = metaData.existingUpvalues.size();
+            metaData.existingUpvalues.emplace(string, uvDes);
+            EmitInstructionWithPayload(OpCodes::GET_UPVALUE, program, &uvDes.table_index, sizeof(unsigned int));
+            return;
+        }
+        indexGlobal += index;
+        currentlyProcessed = currentlyProcessed->enclosing;
+    }
+
+    cout << "BACKEND ERROR: Unknown variable" << endl;
+    exit(-1);
+
+}
+
+void compileUpvalues(char* base_program_pos, InstructionSequence& program, CompilationMeta& metaData)
+{
+    unsigned int compiledFunctionSize = program.instruction - base_program_pos ;
+
+    int up_value_count = metaData.existingUpvalues.size();
+    int total_upvalues_size = up_value_count * sizeof(UpvalueDescriptor);
+    char* functionBodyBuffer = new char[sizeof(int) + total_upvalues_size + compiledFunctionSize];
+    char* functionBodyBufferBase = functionBodyBuffer;
+
+    *(int*)functionBodyBuffer = up_value_count;
+    functionBodyBuffer += sizeof(int);
+    for (auto upvalue : metaData.existingUpvalues)
+    {
+        memcpy(functionBodyBuffer, &upvalue.second, sizeof(UpvalueDescriptor));
+        functionBodyBuffer += sizeof(UpvalueDescriptor);
+    }
+
+    memcpy(functionBodyBuffer, base_program_pos, compiledFunctionSize);
+    AdjustProgramSize(total_upvalues_size, program);
+    memcpy(base_program_pos, functionBodyBufferBase, sizeof(int) + total_upvalues_size + compiledFunctionSize);
+    program.instruction_offset += total_upvalues_size + sizeof(int);
+    program.instruction += total_upvalues_size + sizeof(int);
+    delete[] functionBodyBufferBase;
+}
+
 ScopedVariables prepareFunctionScope(AstNode* params, CompilationMeta& metaData)
 {
     /* 
@@ -462,9 +533,12 @@ ScopedVariables prepareFunctionScope(AstNode* params, CompilationMeta& metaData)
     out.push_back(metaData.scope_variables[0]); // push global variables
     out.push_back(unordered_map<string, int>()); // params layer
     int i;
-    for (i = 0; i < params->children.size() ; i++)
+    if (params != nullptr)
     {
-        out[1].emplace(*(string*)params->children[i]->data, i);
+        for (i = 0; i < params->children.size(); i++)
+        {
+            out[1].emplace(*(string*)params->children[i]->data, i);
+        }
     }
     out[1].emplace("function store object", i); // offset by -1 because of function_frame
     return out;
@@ -473,16 +547,16 @@ ScopedVariables prepareFunctionScope(AstNode* params, CompilationMeta& metaData)
 InstructionSequence backend(const std::vector<AstNode*>& AstSequence)
 {
     InstructionSequence program;
-    program.instruction = new char[1000];
+    program.instruction = new char[10000];
     program.instruction_offset = 0;
-    program.size = 1000;
-    program.stringTable = new char*[3]; 
+    program.size = 10000;
+    program.stringTable = new char*[10]; 
     program.string_count = 0;
-    program.table_size = 3;
+    program.table_size = 10;
     CompilationMeta metaData;
+    metaData.enclosing = nullptr;
     metaData.scope = 0;
     metaData.scope_variables.push_back(unordered_map<string, int>());
-
     for (AstNode* root : AstSequence)
     {
         dispatch(root, program, metaData);
