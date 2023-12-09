@@ -9,8 +9,8 @@ fun test(string)
 }
 
 var ko = test("czesc tu 1");
-ko();
 var ko2 = test("czesc tu 2");
+ko();
 ko2();
 
 

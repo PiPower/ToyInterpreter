@@ -19,23 +19,24 @@ class VirtualMachine
 public:
 	VirtualMachine();
 	void Execute(InstructionSequence instructionData);
-	LoxObject Pop();
-	void Push(LoxObject obj);
+	LoxObject* Pop();
+	void Push(LoxObject* obj);
 private:
-	op_type select_op(OpCodes opcode, const LoxObject& leftOperand, const LoxObject& rightOperand);
+	op_type select_op(OpCodes opcode, const LoxObject* leftOperand, const LoxObject* rightOperand);
 	op_type number_resolver(OpCodes opcode);
 	op_type string_resolver(OpCodes opcode);
 	op_type logical_resolver(OpCodes opcode);
-	void InsertGlobal(char* string, LoxObject obj);
-	LoxObject GetGlobal(const char* string);
-	LoxObject LoadObject(char** instructionData, char** stringTable, char type);
+	void InsertGlobal(char* string, LoxObject* obj);
+	LoxObject* GetGlobal(const char* string);
+	LoxObject* LoadObject(char** instructionData, char** stringTable, char type);
 	void RemoveGlobal(char* string, LoxObject obj);
-	void UpdateGlobal(char* string, LoxObject obj);
-	LoxObject isFalsey(LoxObject& obj);
+	void UpdateGlobal(char* string, LoxObject* obj);
+	LoxObject* isFalsey(LoxObject* obj);
+	LoxObject* CreateLoxObject(LoxType type);
 private:
 	int stack_base;
-	std::vector<LoxObject> stack;
-	std::unordered_map <std::string, LoxObject> globals;
+	std::vector<LoxObject*> stack;
+	std::unordered_map <std::string, LoxObject*> globals;
 	LoxFunction* currentFunction;
 };
 

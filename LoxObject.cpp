@@ -231,10 +231,10 @@ LoxObject newLoxFunction()
 	LoxObject out;
 	out.type = LoxType::FUNCTION;
 	out.value.data = new LoxFunction();
-	AS_FUNCTION(out)->arity = 0;
-	AS_FUNCTION(out)->size = 0;
-	AS_FUNCTION(out)->instruction_offset = 0;
-	AS_FUNCTION(out)->instruction = nullptr;
+	((LoxFunction*)(out.value.data))->arity = 0;
+	((LoxFunction*)(out.value.data))->size = 0;
+	((LoxFunction*)(out.value.data))->instruction_offset = 0;
+	((LoxFunction*)(out.value.data))->instruction = nullptr;
 	return out;
 }
 
@@ -243,8 +243,8 @@ LoxObject newStateBuffer()
 	LoxObject out;
 	out.type = LoxType::STATE_BUFFER;
 	out.value.data = new StateBuffer();
-	AS_SB(out)->instruction = nullptr;
-	AS_SB(out)->stack_size = 0;
+	((StateBuffer*)(out.value.data))->instruction = nullptr;
+	((StateBuffer*)(out.value.data))->stack_size = 0;
 	return out;
 }
 
