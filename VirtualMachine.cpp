@@ -34,7 +34,7 @@ void VirtualMachine::Execute(InstructionSequence program)
             break;
         case OpCodes::NEGATE:
         {
-            LoxObject* obj = Pop();
+            const LoxObject* obj = Pop();
             if (obj->type != LoxType::NUMBER)
             {
                 cout << "VM ERROR: cannot negate non-number types \n";
@@ -49,7 +49,7 @@ void VirtualMachine::Execute(InstructionSequence program)
             char obj_type = *instructionData;
             instructionData += 1;
 
-            LoxObject* c = LoadObject(&instructionData, program.stringTable, obj_type);
+            const LoxObject* c = LoadObject(&instructionData, program.stringTable, obj_type);
             Push(c);
             break;
         }
@@ -57,7 +57,7 @@ void VirtualMachine::Execute(InstructionSequence program)
         {
             int index = *(int*)instructionData;
             instructionData += sizeof(int);
-            LoxObject* place_holder = CreateLoxObject(LoxType::NIL);
+            const LoxObject* place_holder = CreateLoxObject(LoxType::NIL);
             string lol = program.stringTable[index];
             InsertGlobal(program.stringTable[index], place_holder);
             break;
@@ -66,7 +66,7 @@ void VirtualMachine::Execute(InstructionSequence program)
         {
             int index = *(int*)instructionData;
             instructionData += sizeof(int);
-            LoxObject* obj = Pop();
+            const LoxObject* obj = Pop();
             UpdateGlobal(program.stringTable[index], obj);
             break;
         }
@@ -74,7 +74,7 @@ void VirtualMachine::Execute(InstructionSequence program)
         {
             int index = *(int*)instructionData;
             instructionData += sizeof(int);
-            LoxObject* global = GetGlobal(program.stringTable[index]);
+            const LoxObject* global = GetGlobal(program.stringTable[index]);
             Push(global);
             break;
         }
@@ -82,7 +82,7 @@ void VirtualMachine::Execute(InstructionSequence program)
         {
             int stack_offset = *(int*)instructionData;
             instructionData += sizeof(int);
-            LoxObject* place_holder = CreateLoxObject(LoxType::NIL);
+            const LoxObject* place_holder = CreateLoxObject(LoxType::NIL);
             Push(place_holder);
             break;
         }
@@ -90,7 +90,7 @@ void VirtualMachine::Execute(InstructionSequence program)
         {
             int stack_offset = *(int*)instructionData;
             instructionData += sizeof(int);
-            LoxObject* obj = Pop();
+            const LoxObject* obj = Pop();
             this->stack[this->stack_base + stack_offset] = obj;
             break;
         }
@@ -98,7 +98,7 @@ void VirtualMachine::Execute(InstructionSequence program)
         {
             int stack_offset = *(int*)instructionData;
             instructionData += sizeof(int);
-            LoxObject* obj = this->stack[this->stack_base + stack_offset];
+            const LoxObject* obj = this->stack[this->stack_base + stack_offset];
             Push(obj);
             break;
         }
@@ -121,26 +121,24 @@ void VirtualMachine::Execute(InstructionSequence program)
         case OpCodes::DIVIDE:
         case OpCodes::ADD:
         {
-            LoxObject* c = CreateLoxObject(LoxType::NIL);
-            LoxObject* b = Pop();
-            LoxObject* a = Pop(); 
+            const LoxObject* b = Pop();
+            const LoxObject* a = Pop(); 
 
             op = select_op(instructionCode, a , b);
-            *c = op(*a, *b);
-
+            const LoxObject* c = SetLoxObject(op(*a, *b));
             Push(c);
             break;
         }
         case OpCodes::PRINT:
         {
-            LoxObject* obj = Pop();
+            const LoxObject* obj = Pop();
             printLoxObject(*obj);
             cout << endl;
             break;
         }
         case OpCodes::START_FRAME:
         {
-            LoxObject* previousFrame = CreateLoxObject(LoxType::NUMBER);
+            const LoxObject* previousFrame = CreateLoxObject(LoxType::NUMBER);
             previousFrame->value.number = stack_base;
             Push(previousFrame);
             stack_base = stack.size();
@@ -149,14 +147,14 @@ void VirtualMachine::Execute(InstructionSequence program)
         case OpCodes::END_FRAME:
         {
             stack.erase(stack.begin() + stack_base, stack.end());
-            LoxObject* previousFrame = stack[stack.size() - 1];
+            const LoxObject* previousFrame = stack[stack.size() - 1];
             stack_base = previousFrame->value.number;
             stack.pop_back();
             break;
         }
         case OpCodes::NOT:
         {
-            LoxObject* obj = Pop();
+            const LoxObject* obj = Pop();
             Push(isFalsey(obj));
             break;
         }
@@ -164,7 +162,7 @@ void VirtualMachine::Execute(InstructionSequence program)
         {
             int jump_offset = *(int*)instructionData;
             instructionData += sizeof(int);
-            LoxObject* obj = Pop();
+            const LoxObject* obj = Pop();
 
             if (isFalsey(obj)->value.boolean) instructionData += jump_offset;
             break;
@@ -181,7 +179,7 @@ void VirtualMachine::Execute(InstructionSequence program)
         {
             int jump_offset = *(int*)instructionData;
             instructionData += sizeof(int);
-            LoxObject* obj = Pop();
+            const LoxObject* obj = Pop();
 
             if (isFalsey(obj)->value.boolean) instructionData += jump_offset;
             Push(obj);
@@ -197,7 +195,7 @@ void VirtualMachine::Execute(InstructionSequence program)
             int upvalues_count = *(int*)instructionData;
             instructionData += sizeof(int);
 
-            LoxObject* func = CreateLoxObject(LoxType::FUNCTION);
+            const LoxObject* func = CreateLoxObject(LoxType::FUNCTION);
             AS_FUNCTION(func)->arity = arity;
             AS_FUNCTION(func)->size = code_size;
             AS_FUNCTION(func)->upvalueTable.resize(upvalues_count);
@@ -217,8 +215,8 @@ void VirtualMachine::Execute(InstructionSequence program)
         case OpCodes::CALL:
         {
            
-            LoxObject* function = Pop();
-            LoxObject* ip_buffer = CreateLoxObject(LoxType::STATE_BUFFER);
+            const LoxObject* function = Pop();
+            const LoxObject* ip_buffer = CreateLoxObject(LoxType::STATE_BUFFER);
             AS_SB(ip_buffer)->instruction = instructionData;
             AS_SB(ip_buffer)->stack_base = stack_base;
             AS_SB(ip_buffer)->stack_size = stack.size() - AS_FUNCTION(function)->arity;
@@ -231,8 +229,8 @@ void VirtualMachine::Execute(InstructionSequence program)
         }
         case OpCodes::RETURN:
         {
-            LoxObject* returned = Pop();
-            LoxObject* ip_buffer = nullptr;
+            const LoxObject* returned = Pop();
+            const LoxObject* ip_buffer = nullptr;
             for (int i = stack.size() - 1; i >= 0; i--)
             {
                 if (stack[i]->type == LoxType::STATE_BUFFER)
@@ -256,14 +254,14 @@ void VirtualMachine::Execute(InstructionSequence program)
     }
 }
 
-LoxObject* VirtualMachine::Pop()
+const LoxObject* VirtualMachine::Pop()
 {
-    LoxObject* top = stack.back();
+    const LoxObject* top = stack.back();
     stack.pop_back();
     return top;
 }
 
-void VirtualMachine::Push(LoxObject* obj)
+void VirtualMachine::Push(const LoxObject* obj)
 {
     stack.push_back(obj);
 }
@@ -337,9 +335,9 @@ op_type VirtualMachine::logical_resolver(OpCodes opcode)
     }
 }
 
-void VirtualMachine::InsertGlobal(char* string, LoxObject* obj)
+void VirtualMachine::InsertGlobal(char* string, const LoxObject* obj)
 {
-    unordered_map <std::string, LoxObject*>::iterator pos = globals.find(string);
+    unordered_map <std::string,const LoxObject*>::iterator pos = globals.find(string);
     if (pos != globals.cend())
     {
         cout << "VM ERROR: Redefinition of element \n";
@@ -348,9 +346,9 @@ void VirtualMachine::InsertGlobal(char* string, LoxObject* obj)
     globals.insert({ string, obj });
 }
 
-LoxObject* VirtualMachine::GetGlobal(const char* string)
+const LoxObject* VirtualMachine::GetGlobal(const char* string)
 {
-    unordered_map <std::string, LoxObject*>::iterator pos = globals.find(string);
+    unordered_map <std::string,const LoxObject*>::iterator pos = globals.find(string);
     if (pos == globals.cend())
     {
         cout << "VM ERROR: Uknown element \n";
@@ -359,7 +357,7 @@ LoxObject* VirtualMachine::GetGlobal(const char* string)
     return pos->second;
 }
 
-LoxObject* VirtualMachine::LoadObject(char** instructionData, char** stringTable, char type)
+const LoxObject* VirtualMachine::LoadObject(char** instructionData, char** stringTable, char type)
 {
     LoxObject* c = new LoxObject();
     switch (type)
@@ -368,21 +366,21 @@ LoxObject* VirtualMachine::LoadObject(char** instructionData, char** stringTable
     {
         c->type = LoxType::NIL;
         c->value.data = nullptr;
-        return c;
+        break;
     }
     case 1: 
     {
         c->type = LoxType::NUMBER;
         c->value.number = *(double*)(*instructionData);
         *instructionData += sizeof(double);
-        return c;
+        break;
     }
     case 2:
     {
         c->type = LoxType::BOOL;
         c->value.boolean = *(bool*)(*instructionData);
         *instructionData += sizeof(bool);
-        return c;
+        break;
     }
     case 3:
     {
@@ -390,19 +388,21 @@ LoxObject* VirtualMachine::LoadObject(char** instructionData, char** stringTable
         int index = *(int*)(*instructionData);
         *instructionData += sizeof(int);
         c->value.data = stringTable[index];
-        return c;
+        break;
     }
     default:
         cout << "VM ERROR: uknown lox type" << endl;
         exit(-1);
     }
+    MarkObject(c);
+    return c;
 }
 
 
 
-void VirtualMachine::UpdateGlobal(char* string, LoxObject* obj)
+void VirtualMachine::UpdateGlobal(char* string, const LoxObject* obj)
 {
-    unordered_map <std::string, LoxObject*>::iterator pos = globals.find(string);
+    unordered_map <std::string,const LoxObject*>::iterator pos = globals.find(string);
     if (pos == globals.cend())
     {
         cout << "VM ERROR: Uknown element \n";
@@ -411,10 +411,9 @@ void VirtualMachine::UpdateGlobal(char* string, LoxObject* obj)
     pos->second = obj;
 }
 
-LoxObject* VirtualMachine::isFalsey(LoxObject* obj)
+const LoxObject* VirtualMachine::isFalsey(const LoxObject* obj)
 {
-    LoxObject* result = new LoxObject() ;
-    result->type = LoxType::BOOL;
+    const LoxObject* result = CreateLoxObject(LoxType::BOOL) ;
     result->value.boolean = true;
     if(obj->type== LoxType::NIL) result->value.boolean = false;
     if (obj->type == LoxType::BOOL) result->value.boolean = obj->value.boolean;
@@ -422,43 +421,62 @@ LoxObject* VirtualMachine::isFalsey(LoxObject* obj)
     return result;
 }
 
-LoxObject* VirtualMachine::CreateLoxObject(LoxType type)
+const LoxObject* VirtualMachine::CreateLoxObject(LoxType type)
 {
+    LoxObject* out = new LoxObject();
     switch (type)
     {
     case LoxType::NUMBER:
     {
-        LoxObject* out = new LoxObject();
         out->type = LoxType::NUMBER;
         out->value.number = 0;
-        return out;
+        break;
     }
     case LoxType::BOOL:
         break;
     case LoxType::NIL: 
     {
-        LoxObject* out = new LoxObject();
         out->type = LoxType::NIL;
         out->value.data = nullptr;
-        return out;
+        break;
     }
     case LoxType::STATE_BUFFER:
     {
-        LoxObject* out = new LoxObject();
         *out = newStateBuffer();
-        return out;
+        break;
     }
     case LoxType::STRING:
+    {
+        out->type = LoxType::STRING;
+        out->value.data = nullptr;
         break;
+    }
     case LoxType::FUNCTION:
     {
-        LoxObject* out = new LoxObject();
         *out = newLoxFunction();
-        return out;
-    }
-    default:
         break;
     }
+    default:
+        cout << "UNKNOWN TYPE TO CREATE" << endl;
+        exit(-1);
+        break;
+    }
+    MarkObject(out);
+    return out;
+}
+
+const LoxObject* VirtualMachine::SetLoxObject(const LoxObject& src)
+{
+    LoxObject* out = new LoxObject();
+    *out = src;
+    MarkObject(out);
+    return out;
+}
+
+void VirtualMachine::MarkObject(const LoxObject* object)
+{
+    object->trackState = TrackingState::WHITE;
+    tracedObjects.push_back(object);
 }
 
 

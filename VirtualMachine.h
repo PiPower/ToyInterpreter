@@ -9,35 +9,39 @@
 Important note.
 Currently VM leakes memory due to lack of proper memory management.
 TODO: Add garbage collector
+const LoxObject* is required to prevent hidden memory leaks 
+expample if ptr point to string type and we assign number to it we leak string
 */
 
-
 void compile_and_execute(const std::string& source);
+
 
 class VirtualMachine
 {
 public:
 	VirtualMachine();
 	void Execute(InstructionSequence instructionData);
-	LoxObject* Pop();
-	void Push(LoxObject* obj);
+	const LoxObject* Pop();
+	void Push(const LoxObject* obj);
 private:
 	op_type select_op(OpCodes opcode, const LoxObject* leftOperand, const LoxObject* rightOperand);
 	op_type number_resolver(OpCodes opcode);
 	op_type string_resolver(OpCodes opcode);
 	op_type logical_resolver(OpCodes opcode);
-	void InsertGlobal(char* string, LoxObject* obj);
-	LoxObject* GetGlobal(const char* string);
-	LoxObject* LoadObject(char** instructionData, char** stringTable, char type);
-	void RemoveGlobal(char* string, LoxObject obj);
-	void UpdateGlobal(char* string, LoxObject* obj);
-	LoxObject* isFalsey(LoxObject* obj);
-	LoxObject* CreateLoxObject(LoxType type);
+	void InsertGlobal(char* string,const LoxObject* obj);
+	const LoxObject* GetGlobal(const char* string);
+	const LoxObject* LoadObject(char** instructionData, char** stringTable, char type);
+	void UpdateGlobal(char* string, const LoxObject* obj);
+	const LoxObject* isFalsey(const LoxObject* obj);
+	const LoxObject* CreateLoxObject(LoxType type);
+	const LoxObject* SetLoxObject(const LoxObject& src);
+	void MarkObject(const LoxObject* object);
 private:
 	int stack_base;
-	std::vector<LoxObject*> stack;
-	std::unordered_map <std::string, LoxObject*> globals;
+	std::vector<const LoxObject*> stack;
+	std::unordered_map <std::string, const LoxObject*> globals;
 	LoxFunction* currentFunction;
+	std::vector<const LoxObject*> tracedObjects;
 };
 
 #endif // !VIRTUAL_MACHINE

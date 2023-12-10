@@ -14,17 +14,25 @@ enum class LoxType
 	FUNCTION
 };
 
+enum class TrackingState
+{
+	BLACK,
+	GRAY,
+	WHITE
+};
+
 struct Value
 {
 	union {
-		bool boolean;
-		double number;
+		mutable bool boolean;
+		mutable double number;
 		void* data;
 	};
 };
 struct LoxObject
 {
 	LoxType type;
+	mutable TrackingState trackState;
 	Value value;
 };
 
@@ -32,11 +40,11 @@ struct LoxFunction
 {
 	unsigned int arity;
 	
-	char* instruction; 
+	char* instruction;
 	int instruction_offset;
 	unsigned int size;
 
-	std::vector<LoxObject*> upvalueTable;
+	std::vector<const LoxObject*> upvalueTable;
 };
 
 struct StateBuffer
