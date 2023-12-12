@@ -248,6 +248,49 @@ LoxObject newStateBuffer()
 	return out;
 }
 
+void ColorObject(const LoxObject* obj)
+{
+	if (obj->trackState != TrackingState::WHITE) return;
+	
+	switch (obj->type)
+	{
+	case LoxType::NUMBER:
+	case LoxType::BOOL:
+	case LoxType::NIL:
+	case LoxType::STRING:
+		obj->trackState = TrackingState::BLACK;
+		break;
+	case LoxType::FUNCTION:
+		obj->trackState = TrackingState::GRAY;
+		AS_FUNCTION(obj)->trackState = TrackingState::GRAY;
+		for (const LoxObject* subObj : AS_FUNCTION(obj)->upvalueTable)
+		{
+			ColorObject(subObj);
+		}
+		AS_FUNCTION(obj)->trackState = TrackingState::BLACK;
+		obj->trackState = TrackingState::BLACK;
+		break;
+	case LoxType::STATE_BUFFER:
+	{
+		obj->trackState = TrackingState::GRAY;
+		AS_SB(obj)->trackState = TrackingState::GRAY;
+		LoxFunction* caller = AS_SB(obj)->caller;
+		caller->trackState = TrackingState::GRAY;
+		for (const LoxObject* subObj : caller->upvalueTable)
+		{
+			ColorObject(subObj);
+		}
+		caller->trackState = TrackingState::BLACK;
+		AS_SB(obj)->trackState = TrackingState::BLACK;
+		obj->trackState = TrackingState::BLACK;
+		break;
+	}
+	default:
+		cout << "Uknown object to color" << endl;
+		exit(-1);
+	}
+}
+
 void FreeLoxObject(const LoxObject& obj)
 {
 	switch (obj.type)

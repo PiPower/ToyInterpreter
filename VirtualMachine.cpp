@@ -1,5 +1,6 @@
 #include "VirtualMachine.h"
 #include <iostream>
+#include <chrono>
 using namespace std;
 
 void compile_and_execute(const std::string& source)
@@ -12,6 +13,7 @@ void compile_and_execute(const std::string& source)
 
 VirtualMachine::VirtualMachine()
 {
+    total_time = 0;
     stack_base = 0;
     currentFunction = nullptr;
 }
@@ -21,6 +23,8 @@ void VirtualMachine::Execute(InstructionSequence program)
     char* instructionData = program.instruction - program.instruction_offset;
     while (true)
     {
+        chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
         uint16_t instruction = *instructionData;
         instructionData += 2;
         OpCodes instructionCode = valueToOpcode(instruction);
@@ -203,7 +207,6 @@ void VirtualMachine::Execute(InstructionSequence program)
             {
                 UpvalueDescriptor* desc = (UpvalueDescriptor*)instructionData;
                 instructionData += sizeof(UpvalueDescriptor);
-                //TODO copy stakc object to upvalue table
                 AS_FUNCTION(func)->upvalueTable[desc->table_index] = stack[stack_base + desc->stack_pos];
             }
 
@@ -251,6 +254,14 @@ void VirtualMachine::Execute(InstructionSequence program)
             break;
         }
 
+        chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+        total_time += chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+        if (total_time >= 100)
+        {
+            total_time = 0;
+            TraceObjects();
+            SweepObjects();
+        }
     }
 }
 
@@ -477,6 +488,23 @@ void VirtualMachine::MarkObject(const LoxObject* object)
 {
     object->trackState = TrackingState::WHITE;
     tracedObjects.push_back(object);
+}
+
+void VirtualMachine::TraceObjects()
+{
+    for (const LoxObject* obj : stack)
+    {
+        ColorObject(obj);
+    }
+
+    for (auto& global : globals)
+    {
+        ColorObject(global.second);
+    }
+}
+
+void VirtualMachine::SweepObjects()
+{
 }
 
 

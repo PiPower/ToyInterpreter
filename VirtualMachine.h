@@ -36,8 +36,11 @@ private:
 	const LoxObject* CreateLoxObject(LoxType type);
 	const LoxObject* SetLoxObject(const LoxObject& src);
 	void MarkObject(const LoxObject* object);
+	void TraceObjects();
+	void SweepObjects();
 private:
 	int stack_base;
+	double total_time;
 	std::vector<const LoxObject*> stack;
 	std::unordered_map <std::string, const LoxObject*> globals;
 	LoxFunction* currentFunction;

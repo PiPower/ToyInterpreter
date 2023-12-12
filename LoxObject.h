@@ -45,6 +45,7 @@ struct LoxFunction
 	unsigned int size;
 
 	std::vector<const LoxObject*> upvalueTable;
+	mutable TrackingState trackState;
 };
 
 struct StateBuffer
@@ -53,6 +54,7 @@ struct StateBuffer
 	int stack_base;
 	int stack_size; 
 	LoxFunction* caller;
+	mutable TrackingState trackState;
 };
 typedef LoxObject(*op_type)(const LoxObject&, const LoxObject&);
 
@@ -74,6 +76,7 @@ LoxObject concat_strings(const LoxObject& leftOperand, const LoxObject& rightOpe
 //function
 LoxObject newLoxFunction();
 LoxObject newStateBuffer();
+void ColorObject(const LoxObject* obj);
 void FreeLoxObject(const LoxObject& obj);
 #endif // !
 
