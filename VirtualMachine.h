@@ -13,15 +13,6 @@ expample if ptr point to string type and we assign number to it we leak string
 void compile_and_execute(const std::string& source);
 
 
-struct LoxHasher
-{
-	std::size_t operator()(const LoxObject* s) const noexcept
-	{
-		std::string key = (char*)s->value.data;
-		return std::hash<std::string>{}(key);
-	}
-};
-
 class VirtualMachine
 {
 public:
@@ -49,7 +40,7 @@ private:
 	int stack_base;
 	double total_time;
 	std::vector<const LoxObject*> stack;
-	std::unordered_map <const LoxObject*, const LoxObject*, LoxHasher> globals;
+	std::unordered_map <std::string, const LoxObject*> globals;
 	LoxFunction* currentFunction;
 	std::vector<const LoxObject*> tracedObjects;
 };

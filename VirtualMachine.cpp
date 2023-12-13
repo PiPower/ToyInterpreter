@@ -348,21 +348,18 @@ op_type VirtualMachine::logical_resolver(OpCodes opcode)
 
 void VirtualMachine::InsertGlobal(char* string, const LoxObject* obj)
 {
-    const LoxObject* key = LoadObject(LoxType::STRING,string);
-
-    unordered_map <const LoxObject*,const LoxObject*>::iterator pos = globals.find(key);
+    unordered_map<std::string,const LoxObject*>::iterator pos = globals.find(string);
     if (pos != globals.cend())
     {
         cout << "VM ERROR: Redefinition of element \n";
         exit(-1);
     }
-    globals.insert({ key, obj });
+    globals.insert({ string, obj });
 }
 
 const LoxObject* VirtualMachine::GetGlobal(const char* string)
 {
-    const LoxObject* key = LoadObject(LoxType::STRING, string);
-    unordered_map <const LoxObject*,const LoxObject*>::iterator pos = globals.find(key);
+    unordered_map <std::string , const LoxObject* > ::iterator pos = globals.find(string);
     if (pos == globals.cend())
     {
         cout << "VM ERROR: Uknown element \n";
@@ -401,7 +398,9 @@ const LoxObject* VirtualMachine::LoadObject(char** instructionData, char** strin
         c->type = LoxType::STRING;
         int index = *(int*)(*instructionData);
         *instructionData += sizeof(int);
-        c->value.data = stringTable[index];
+        int string_len = strlen(stringTable[index]) + 1;
+        c->value.data = new char[string_len];
+        memcpy(c->value.data, stringTable[index], string_len);
         break;
     }
     default:
@@ -444,9 +443,7 @@ const LoxObject* VirtualMachine::LoadObject(LoxType type, const void* data)
 
 void VirtualMachine::UpdateGlobal(char* string, const LoxObject* obj)
 {
-    const LoxObject* key = LoadObject(LoxType::STRING, string);
-
-    unordered_map <const LoxObject*, const LoxObject*>::iterator pos = globals.find(key);
+    unordered_map <std::string, const LoxObject*>::iterator pos = globals.find(string);
     if (pos == globals.cend())
     {
         cout << "VM ERROR: Uknown element \n";
@@ -532,7 +529,6 @@ void VirtualMachine::TraceObjects()
 
     for (auto& global : globals)
     {
-        ColorObject(global.first);
         ColorObject(global.second);
     }
 }
