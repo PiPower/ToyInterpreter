@@ -26,7 +26,7 @@ struct Value
 	union {
 		mutable bool boolean;
 		mutable double number;
-		void* data;
+		mutable void* data;
 	};
 };
 struct LoxObject
@@ -77,6 +77,6 @@ LoxObject concat_strings(const LoxObject& leftOperand, const LoxObject& rightOpe
 LoxObject newLoxFunction();
 LoxObject newStateBuffer();
 void ColorObject(const LoxObject* obj);
-void FreeLoxObject(const LoxObject& obj);
+void FreeLoxObject(const LoxObject* obj);
 #endif // !
 

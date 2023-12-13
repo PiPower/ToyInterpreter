@@ -291,14 +291,35 @@ void ColorObject(const LoxObject* obj)
 	}
 }
 
-void FreeLoxObject(const LoxObject& obj)
+void FreeLoxObject(const LoxObject* obj)
 {
-	switch (obj.type)
+	switch (obj->type)
 	{
-	case LoxType::STRING :
-		delete[] obj.value.data;
-		break;
-	default:
-		break;
+	case LoxType::NUMBER:
+	case LoxType::BOOL:
+	case LoxType::NIL:
+		delete obj;
+		return;
+	case LoxType::STRING:
+
+		delete (char*)obj->value.data;
+		obj->value.data = nullptr;
+		delete obj;
+		return;
+	case LoxType::FUNCTION:
+		if(AS_FUNCTION(obj)->trackState == TrackingState::WHITE) delete AS_FUNCTION(obj);
+		delete obj;
+		return;
+	case LoxType::STATE_BUFFER:
+
+		if (AS_SB(obj)->caller !=nullptr &&
+			AS_SB(obj)->caller->trackState == TrackingState::WHITE)
+		{
+			delete AS_SB(obj)->caller;
+		}
+		if (AS_SB(obj)->trackState == TrackingState::WHITE) delete AS_SB(obj);
+		delete obj;
+		return;
 	}
+
 }

@@ -1,5 +1,6 @@
 #include "VirtualMachine.h"
 #include <iostream>
+#include <algorithm>
 #include <chrono>
 using namespace std;
 
@@ -256,7 +257,7 @@ void VirtualMachine::Execute(InstructionSequence program)
 
         chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         total_time += chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-        if (total_time >= 100)
+        if (total_time >= 300)
         {
             total_time = 0;
             TraceObjects();
@@ -505,6 +506,18 @@ void VirtualMachine::TraceObjects()
 
 void VirtualMachine::SweepObjects()
 {
+    for (int i = 0; i < tracedObjects.size(); i++)
+    {
+        const LoxObject** obj = &tracedObjects[i];
+        if ((*obj)->trackState == TrackingState::WHITE)
+        {
+            FreeLoxObject(*obj);
+            *obj = nullptr;
+        }
+        else (*obj)->trackState = TrackingState::WHITE;
+
+    }
+    erase(tracedObjects, nullptr);
 }
 
 
