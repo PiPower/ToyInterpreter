@@ -6,15 +6,21 @@
 #include "LoxObject.h"
 #include "compiler.h"
 /*
-Important note.
-Currently VM leakes memory due to lack of proper memory management.
-TODO: Add garbage collector
 const LoxObject* is required to prevent hidden memory leaks 
 expample if ptr point to string type and we assign number to it we leak string
 */
 
 void compile_and_execute(const std::string& source);
 
+
+struct LoxHasher
+{
+	std::size_t operator()(const LoxObject* s) const noexcept
+	{
+		std::string key = (char*)s->value.data;
+		return std::hash<std::string>{}(key);
+	}
+};
 
 class VirtualMachine
 {
@@ -31,6 +37,7 @@ private:
 	void InsertGlobal(char* string,const LoxObject* obj);
 	const LoxObject* GetGlobal(const char* string);
 	const LoxObject* LoadObject(char** instructionData, char** stringTable, char type);
+	const LoxObject* LoadObject(LoxType type, const void* data);
 	void UpdateGlobal(char* string, const LoxObject* obj);
 	const LoxObject* isFalsey(const LoxObject* obj);
 	const LoxObject* CreateLoxObject(LoxType type);
@@ -42,7 +49,7 @@ private:
 	int stack_base;
 	double total_time;
 	std::vector<const LoxObject*> stack;
-	std::unordered_map <std::string, const LoxObject*> globals;
+	std::unordered_map <const LoxObject*, const LoxObject*, LoxHasher> globals;
 	LoxFunction* currentFunction;
 	std::vector<const LoxObject*> tracedObjects;
 };

@@ -63,7 +63,6 @@ void VirtualMachine::Execute(InstructionSequence program)
             int index = *(int*)instructionData;
             instructionData += sizeof(int);
             const LoxObject* place_holder = CreateLoxObject(LoxType::NIL);
-            string lol = program.stringTable[index];
             InsertGlobal(program.stringTable[index], place_holder);
             break;
         }
@@ -349,18 +348,21 @@ op_type VirtualMachine::logical_resolver(OpCodes opcode)
 
 void VirtualMachine::InsertGlobal(char* string, const LoxObject* obj)
 {
-    unordered_map <std::string,const LoxObject*>::iterator pos = globals.find(string);
+    const LoxObject* key = LoadObject(LoxType::STRING,string);
+
+    unordered_map <const LoxObject*,const LoxObject*>::iterator pos = globals.find(key);
     if (pos != globals.cend())
     {
         cout << "VM ERROR: Redefinition of element \n";
         exit(-1);
     }
-    globals.insert({ string, obj });
+    globals.insert({ key, obj });
 }
 
 const LoxObject* VirtualMachine::GetGlobal(const char* string)
 {
-    unordered_map <std::string,const LoxObject*>::iterator pos = globals.find(string);
+    const LoxObject* key = LoadObject(LoxType::STRING, string);
+    unordered_map <const LoxObject*,const LoxObject*>::iterator pos = globals.find(key);
     if (pos == globals.cend())
     {
         cout << "VM ERROR: Uknown element \n";
@@ -410,11 +412,41 @@ const LoxObject* VirtualMachine::LoadObject(char** instructionData, char** strin
     return c;
 }
 
+const LoxObject* VirtualMachine::LoadObject(LoxType type, const void* data)
+{
+    LoxObject* c = new LoxObject();
+    switch (type)
+    {
+    case LoxType::NIL:
+    case LoxType::NUMBER:
+    case LoxType::BOOL:
+        c->type = LoxType::BOOL;
+        cout << "unsupported loaded object type" << endl;
+        exit(-1);
+
+    case LoxType::STRING:
+    {
+        c->type = LoxType::STRING;
+        int string_len = strlen((char*)data) + 1;
+        c->value.data = new char[string_len];
+        memcpy(c->value.data, (char*)data, string_len);
+        break;
+    }
+    default:
+        cout << "VM ERROR: uknown lox type" << endl;
+        exit(-1);
+    }
+    MarkObject(c);
+    return c;
+}
+
 
 
 void VirtualMachine::UpdateGlobal(char* string, const LoxObject* obj)
 {
-    unordered_map <std::string,const LoxObject*>::iterator pos = globals.find(string);
+    const LoxObject* key = LoadObject(LoxType::STRING, string);
+
+    unordered_map <const LoxObject*, const LoxObject*>::iterator pos = globals.find(key);
     if (pos == globals.cend())
     {
         cout << "VM ERROR: Uknown element \n";
@@ -500,6 +532,7 @@ void VirtualMachine::TraceObjects()
 
     for (auto& global : globals)
     {
+        ColorObject(global.first);
         ColorObject(global.second);
     }
 }
