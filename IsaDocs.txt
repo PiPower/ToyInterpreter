@@ -32,13 +32,14 @@ GET GLOBAL VARIABLE; pushes given global onto stack; op_code(2 byte)|string_inde
 DEFINE LOCAL VARIABLE; pushes NIL variable onto top of the stack; op_code(2 byte)|unused(4 byte)
 SET LOCAL VARIABLE; assigns new value to object at pos = stack_base + stack_offset; op_code(2 byte)|stack_offset(4 byte int)
 GET LOCAL VARIABLE; pushes object from stack at pos = stack_base + stack_offset onto top of the stack; op_code(2 byte)|stack_offset(4 byte int)
+GET_UPVALUE; pushes upvalue onto stack  op_code(2 byte)|table position(4 byte unsigned int)
 START FRAME; changes stack base onto top of the stack; op_code(2 byte)
 END FRAME; restores stack base onto previous top value; op_code(2 byte)
 NOT; pop value from stack and negate it and push back; op_code(2 byte)
-
-JUMP;
-JUMP_IF_FALSE;
-JUMP_IF_FALSE_KEEP_STACK;
+JUMP; add offset to instruction pointer; op_code(2 byte)|offset(4 byte int)
+JUMP_IF_FALSE; pop top of the stack and if false add offset to instruction pointer; op_code(2 byte)|offset(4 byte int)
+JUMP_IF_FALSE_KEEP_STACK;  pop top of the stack and if false add offset to instruction pointer then push poped value onto stack; op_code(2 byte)|offset(4 byte int)
 CREATE_FUNCTION; creates function; op_code(2 byte)|arity (4 byte uint)|byte_code_size(4 byte int) | upvalues_count(4 byte int) | define_upvalue_1 ... define_upvalue_k;
 define_upvalue_1 = stack_offset(4byte int) | table_position(4 byte int);
-CALL;
+CALL; pop object from top of the stack and change value of instruction pointer to one pointer by the poped object; op_code(2 byte)
+RETURN; return from function call ie restore intruction pointer value before CALL was called and push return value on top of the stack; op_code(2 byte)
